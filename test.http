@@ -1,0 +1,10 @@
+@AGW_PUBLIC_IP=20.27.171.77
+
+### app
+
+GET https://{{AGW_PUBLIC_IP}}
+
+
+### Health Check api
+
+GET https://{{AGW_PUBLIC_IP}}/api/health

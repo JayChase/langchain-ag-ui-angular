@@ -1,0 +1,70 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "value": "${AZURE_ENV_NAME}"
+    },
+    "resourceGroupName": {
+      "value": "${AZURE_RESOURCE_GROUP}"
+    },
+    "location": {
+      "value": "${AZURE_LOCATION}"
+    },
+    "cognitiveServicesLocation": {
+      "value": "${AZURE_COG_LOCATION}"
+    },
+    "maxTokens": {
+      "value": "${MAX_TOKENS=4096}"
+    },
+    "temperature": {
+      "value": "${TEMPERATURE=0.7}"
+    },
+    "langsmithApiKey": {
+      "value": "${LANGSMITH_API_KEY}"
+    },
+    "postgresAdminUsername": {
+      "value": "${POSTGRES_ADMIN_USERNAME=pgadmin}"
+    },
+    "postgresDatabaseName": {
+      "value": "${POSTGRES_DATABASE_NAME=agentdb}"
+    },
+    "restore": {
+      "value": "${RESTORE=false}"
+    },
+    "myIpAddress": {
+      "value": "${AZURE_MY_IP_ADDRESS=}"
+    },
+    "recoverKeyVault": {
+      "value": "${RECOVER_KEY_VAULT=false}"
+    },
+    "serviceManagementReference": {
+      "value": "${AZURE_SERVICE_MANAGEMENT_REFERENCE=}"
+    },
+    "chatModels": {
+      "value": [
+        {
+          "name": "gpt-5.4-mini",
+          "model": {
+            "name": "${AZURE_COG_MODEL_1=gpt-5.4-mini}",
+            "format": "OpenAI",
+            "version": "${AZURE_COG_MODEL_VERSION_1=2026-03-17}"
+          },
+          "sku": {
+            "name": "GlobalStandard",
+            "capacity": 15
+          }
+        }
+      ]
+    },
+    "agentExists": {
+      "value": "${SERVICE_AGENT_RESOURCE_EXISTS=false}"
+    },
+    "apiExists": {
+      "value": "${SERVICE_API_RESOURCE_EXISTS=false}"
+    },
+    "appExists": {
+      "value": "${SERVICE_APP_RESOURCE_EXISTS=false}"
+    }
+  }
+}

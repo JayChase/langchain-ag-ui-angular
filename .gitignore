@@ -1,0 +1,23 @@
+.azure
+node_modules
+**/node_modules
+__azurite_db_**
+test.json
+__blobstorage__
+__queuestorage__
+**/coverage/**
+
+**/dist
+**/dist/**
+.temp
+setup-env.sh
+project-setup.md
+# Environment files at any level
+**/.env
+
+# Demo App Gateway certificate artifacts
+infra/cert/*.key
+infra/cert/*.pfx
+.tmp-icons
+
+./*.temp.*

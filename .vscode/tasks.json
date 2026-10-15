@@ -1,0 +1,29 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "pnpm: app start",
+            "type": "shell",
+            "command": "pnpm",
+            "args": [
+                "--filter",
+                "app",
+                "run",
+                "start"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "pnpm: app test",
+            "type": "shell",
+            "command": "pnpm",
+            "args": [
+                "--filter",
+                "app",
+                "run",
+                "test"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

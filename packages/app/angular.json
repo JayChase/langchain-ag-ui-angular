@@ -1,0 +1,112 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "cli": {
+    "packageManager": "pnpm",
+    "analytics": "eb0a0991-321b-4803-bace-a29d03ddd879"
+  },
+  "newProjectRoot": "projects",
+  "projects": {
+    "demo": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "inlineTemplate": true,
+          "inlineStyle": true,
+          "style": "scss"
+        }
+      },
+      "root": "projects/demo",
+      "sourceRoot": "projects/demo/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/demo/src/main.ts",
+            "tsConfig": "projects/demo/tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/demo/public"
+              }
+            ],
+            "styles": [
+              "projects/demo/src/styles.scss"
+            ],
+            "server": "projects/demo/src/main.server.ts",
+            "outputMode": "server",
+            "security": {
+              "allowedHosts": [
+                "localhost",
+                "ca-app.purplebeach-2c40beb1.japaneast.azurecontainerapps.io",
+                "ca-app.salmonsand-4cf35bc7.japaneast.azurecontainerapps.io",
+                "ca-app.jollysky-aaa80852.japaneast.azurecontainerapps.io",
+                "ca-app.orangesmoke-ee7a08c6.japaneast.azurecontainerapps.io",
+                "ca-app.livelyisland-c2384403.japaneast.azurecontainerapps.io",
+                "ca-app.orangegrass-9e809ed1.japaneast.azurecontainerapps.io",
+                "ca-zppo3a2ija5dm-app.whiteplant-2d49849f.japaneast.azurecontainerapps.io",
+                "ca-zppo3a2ija5dm-app.nicecoast-a319a831.japaneast.azurecontainerapps.io",
+                "ca-zppo3a2ija5dm-app.bravebay-dff2c725.japaneast.azurecontainerapps.io",
+                "ca-hbq4crt6cho5c-app.proudflower-a7b4f612.japaneast.azurecontainerapps.io"
+              ]
+            },
+            "ssr": {
+              "entry": "projects/demo/src/server.ts"
+            }
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "6mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "10kb",
+                  "maximumError": "300kb"
+                },
+                {
+                  "type": "any",
+                  "maximumWarning": "2mb",
+                  "maximumError": "6mb"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "projects/demo/src/environments/environment.ts",
+                  "with": "projects/demo/src/environments/environment.development.ts"
+                }
+              ]
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "demo:build:production"
+            },
+            "development": {
+              "buildTarget": "demo:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test"
+        }
+      }
+    }
+  }
+}

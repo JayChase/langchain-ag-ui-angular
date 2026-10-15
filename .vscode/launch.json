@@ -1,0 +1,80 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "🖥️ ng serve",
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "pnpm: app start",
+      "url": "http://localhost:4200/"
+    },
+    {
+      "name": "🗼 api",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "nodeVersionHint": 24,
+      "runtimeArgs": [
+        "--filter",
+        "api",
+        "run",
+        "dev"
+      ],
+      "console": "internalConsole",
+      "cwd": "${workspaceFolder}",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "env": {
+        "NODE_ENV": "development",
+      }
+    },
+    {
+      "name": "LangGraph Dev (inspect)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "agent",
+        "run",
+        "dev"
+      ],
+      "presentation": {
+        "hidden": true
+      },
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        "NODE_OPTIONS": "--inspect=9230 --enable-source-maps"
+      },
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "autoAttachChildProcesses": true
+    },
+    {
+      "name": "Attach LangGraph Dev",
+      "type": "node",
+      "request": "attach",
+      "port": 9230,
+      "restart": true,
+      "presentation": {
+        "hidden": true
+      },
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "autoAttachChildProcesses": true
+    }
+  ],
+  "compounds": [
+    {
+      "name": "🤖 agent",
+      "configurations": [
+        "LangGraph Dev (inspect)",
+        "Attach LangGraph Dev"
+      ]
+    }
+  ]
+}

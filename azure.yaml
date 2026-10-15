@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: langchain-ag-ui-angular
+metadata:
+    template: azd-init@1.31.1
+
+workflows:
+  up:
+    - azd: provision
+    - azd: package --all
+    - azd: deploy --all
+
+hooks:
+  preprovision:
+    posix:
+      shell: sh
+      run: ./infra/set-my-ip.sh
+
+    windows:
+      shell: pwsh
+      run: ./infra/set-my-ip.ps1
+  postprovision:
+    posix:
+      shell: sh
+      run: ./infra/replace-placeholders.sh packages/app/projects/demo/src/environments/environment.template.ts packages/app/projects/demo/src/environments/environment.ts && ./infra/update-env.sh && ./infra/update-angular-json.sh
+
+    windows:
+      shell: pwsh
+      run: ./infra/replace-placeholders.ps1 packages/app/projects/demo/src/environments/environment.template.ts packages/app/projects/demo/src/environments/environment.ts; ./infra/update-env.ps1; ./infra/update-angular-json.ps1
+ 
+  postdeploy:
+    posix:
+      shell: sh
+      interactive: true
+      run: ./infra/post-deploy-info.sh
+
+    windows:
+      shell: pwsh
+      interactive: true
+      run: ./infra/post-deploy-info.ps1
+
+services:
+  app:
+    project: .
+    host: containerapp
+    language: js
+    docker:
+      path: packages/app/Dockerfile
+      context: .
+      remoteBuild: true
+  api:
+    project: .
+    host: containerapp
+    language: js
+    docker:
+      path: packages/api/Dockerfile
+      context: .
+      remoteBuild: true
+  agent:
+    project: .
+    host: containerapp
+    language: js
+    docker:
+      path: packages/agent/Dockerfile
+      context: .
+      remoteBuild: true

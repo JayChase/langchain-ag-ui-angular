@@ -1,0 +1,27 @@
+{
+    "workbench.colorCustomizations": {
+        "editorGroupHeader.tabsBackground": "#12080F",
+        "tab.border": "#4A1839",
+        "tab.inactiveBackground": "#12080F",
+        "tab.inactiveForeground": "#C58AB0",
+        "tab.activeForeground": "#FFF7FD",
+        "tab.unfocusedActiveForeground": "#FFF7FD",
+        "tab.unfocusedActiveBorder": "#FF4FD8",
+        "tab.activeBorderTop": "#FF4FD8",
+        "tab.unfocusedActiveBorderTop": "#FF4FD8",
+        "statusBar.noFolderBackground": "#4C0A64",
+        "statusBar.noFolderForeground": "#FDFAFE"
+    },
+    "debug.terminal.clearBeforeReusing": true,
+    "postman.settings.dotenv-detection-notification-visibility": false,
+    "cSpell.words": [
+        "checkpointer",
+        "containerapp",
+        "inspo",
+        "postdeploy",
+        "postprovision",
+        "rediss",
+        "serde",
+        "sumi"
+    ]
+}

@@ -1,0 +1,239 @@
+{
+  "version": 1,
+  "skills": {
+    "a2ui-renderer": {
+      "source": "CopilotKit/CopilotKit",
+      "sourceType": "github",
+      "skillPath": "skills/a2ui-renderer/SKILL.md",
+      "computedHash": "28d6eb27551c218c10de75a8edc4e0b23e9243ff9bb8ebe847730acb4817a242"
+    },
+    "angular-css-bem-best-practices": {
+      "source": "develite98/angular-best-practices",
+      "sourceType": "github",
+      "skillPath": "skills/angular-css-bem-best-practices/SKILL.md",
+      "computedHash": "709330762d24c8646a883beb5de0a001f4ccc3f52f80d2bb039e116f5fe344d0"
+    },
+    "angular-developer": {
+      "source": "angular/skills",
+      "sourceType": "github",
+      "skillPath": "angular-developer/SKILL.md",
+      "computedHash": "390535a21ca293acbef16e588cfd77f954b0f0eae23d45477b47b0b0ce00eb47"
+    },
+    "angular-new-app": {
+      "source": "angular/skills",
+      "sourceType": "github",
+      "skillPath": "angular-new-app/SKILL.md",
+      "computedHash": "d9f712544847ab80ef7ed20043820afd275c394ca05340c2f20a0f051e35d945"
+    },
+    "azure-ai": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-ai/SKILL.md",
+      "computedHash": "98ac27fb19c03c66e1b9654cd6915eeab472a8fcccdaa058a2571f8b10ce7e6b"
+    },
+    "azure-deploy": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-deploy/SKILL.md",
+      "computedHash": "b51dc940fc7c4dcc585fcd35539b4461efebaa2864255bedf0c736189c10c0cf"
+    },
+    "azure-deployment-preflight": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/azure-deployment-preflight/SKILL.md",
+      "computedHash": "2759103c197250041eed59020eb23a0adf8ade8a253b4d17030c76029f6476ca"
+    },
+    "azure-developer-cli": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/azure-developer-cli/SKILL.md",
+      "computedHash": "2a6ed537ddf113f0a99639deb1db4c450f30898ffc5e0c2397fe2ed10ad37ebd"
+    },
+    "azure-enterprise-infra-planner": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-enterprise-infra-planner/SKILL.md",
+      "computedHash": "daddd394f136796da3901dee7251ba076c18a9b1b3ede9b95c6c202c62893a92"
+    },
+    "azure-kubernetes": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-kubernetes/SKILL.md",
+      "computedHash": "dc9cb1e99539161a3442f95ef6f2fbca6e6722626008d1cca147b4c32b525ac6"
+    },
+    "azure-messaging": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-messaging/SKILL.md",
+      "computedHash": "307701a0f43161afbe52cec998136fcd7cbb67a27f73d9034ff36fe0168d32b3"
+    },
+    "azure-storage": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-storage/SKILL.md",
+      "computedHash": "e59d7982fb1a61df19dde417ece3689b299c37a471792ca9d2968e2cba9ddbf6"
+    },
+    "channels-setup": {
+      "source": "CopilotKit/CopilotKit",
+      "sourceType": "github",
+      "skillPath": "skills/channels-setup/SKILL.md",
+      "computedHash": "8c3d3efd131fbea6d7b5934f8b0bd04ae357694ecd3fd38ccfdd1633f649c227"
+    },
+    "copilotkit-agui": {
+      "source": "CopilotKit/CopilotKit",
+      "sourceType": "github",
+      "skillPath": "skills/copilotkit-agui/SKILL.md",
+      "computedHash": "57a8f89ba1212667813a69505f37249e8d7ed52472249a4d5dda250dbdbd987c"
+    },
+    "copilotkit-channels": {
+      "source": "CopilotKit/CopilotKit",
+      "sourceType": "github",
+      "skillPath": "skills/copilotkit-channels/SKILL.md",
+      "computedHash": "901c5aebf9971667f0f8bf8693b1f745383ca53ba0b3046f5436455c426a9501"
+    },
+    "copilotkit-contribute": {
+      "source": "CopilotKit/CopilotKit",
+      "sourceType": "github",
+      "skillPath": "skills/copilotkit-contribute/SKILL.md",
+      "computedHash": "fd3d1064923a94d116cdda0810631f8123498c10789c9422784ca0c6c41a3a47"
+    },
+    "copilotkit-debug": {
+      "source": "CopilotKit/CopilotKit",
+      "sourceType": "github",
+      "skillPath": "skills/copilotkit-debug/SKILL.md",
+      "computedHash": "0734190efe6eb071ec6ba6ff659d562fb6d6a30181e7ef049b24354da52dfc75"
+    },
+    "copilotkit-develop": {
+      "source": "CopilotKit/CopilotKit",
+      "sourceType": "github",
+      "skillPath": "skills/copilotkit-develop/SKILL.md",
+      "computedHash": "6e4972c28780731f73f6ae3b3046ae7d94b672da3207712cff810ae26e10e84e"
+    },
+    "copilotkit-integrations": {
+      "source": "CopilotKit/CopilotKit",
+      "sourceType": "github",
+      "skillPath": "skills/copilotkit-integrations/SKILL.md",
+      "computedHash": "32e9c6906292dd626d73226b57ade90f712935e3c2962ea75994e184cb755cef"
+    },
+    "copilotkit-self-update": {
+      "source": "CopilotKit/CopilotKit",
+      "sourceType": "github",
+      "skillPath": "skills/copilotkit-self-update/SKILL.md",
+      "computedHash": "22d09f38a1b83fdb6ee30629f5921f749072bcd63e885b23c19fcd723e6ea452"
+    },
+    "copilotkit-setup": {
+      "source": "CopilotKit/CopilotKit",
+      "sourceType": "github",
+      "skillPath": "skills/copilotkit-setup/SKILL.md",
+      "computedHash": "598094a95bf5dfafe0541eecdee82d391006a571f8bb794c424cd62552277a17"
+    },
+    "copilotkit-upgrade": {
+      "source": "CopilotKit/CopilotKit",
+      "sourceType": "github",
+      "skillPath": "skills/copilotkit-upgrade/SKILL.md",
+      "computedHash": "40e9c08f558e373f3632ae308112c625c344091134c2a30d361f8d88eddcf3f1"
+    },
+    "entra-agent-id": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/entra-agent-id/SKILL.md",
+      "computedHash": "c7e1802777cddd24128b30725d750dfcae28be5f7ba913559afedcd030a9633b"
+    },
+    "entra-app-registration": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/entra-app-registration/SKILL.md",
+      "computedHash": "40dd32c8a38e47b4a67e4d7e36232065be94ce4f6cf2d818fe46d6a6b3830b23"
+    },
+    "hono": {
+      "source": "spenserhale/hono-skill",
+      "sourceType": "github",
+      "skillPath": "skills/hono/SKILL.md",
+      "computedHash": "452671ed176a390d8ae0946ad9566c4b057ad8ff469083ae1dcd1987975d01c5"
+    },
+    "langchain-fundamentals": {
+      "source": "langchain-ai/langchain-skills",
+      "sourceType": "github",
+      "skillPath": "config/skills/langchain-fundamentals/SKILL.md",
+      "computedHash": "766050497c9a8bde7a8df17cb8c00291e0fd4a62662d735c628b2bb6725a1002"
+    },
+    "langchain-middleware": {
+      "source": "langchain-ai/langchain-skills",
+      "sourceType": "github",
+      "skillPath": "config/skills/langchain-middleware/SKILL.md",
+      "computedHash": "20c6965cd2d81879be648b799dffa9d50e642a0568998aa22264e5de72dfa46c"
+    },
+    "langchain-typescript-quickstart": {
+      "source": "langchain-ai/langchain-skills",
+      "sourceType": "github",
+      "skillPath": "config/skills/langchain-typescript-quickstart/SKILL.md",
+      "computedHash": "1c57a182bdd02d47b181229728a3b59986cf97d0db76861dc4387974ab46dcb7"
+    },
+    "langgraph-cli": {
+      "source": "langchain-ai/langchain-skills",
+      "sourceType": "github",
+      "skillPath": "config/skills/langgraph-cli/SKILL.md",
+      "computedHash": "089d9b2a9194eda1d1b969bd4e06874081e9f6474330aacc8f3b6c12adebc80e"
+    },
+    "langgraph-fundamentals": {
+      "source": "langchain-ai/langchain-skills",
+      "sourceType": "github",
+      "skillPath": "config/skills/langgraph-fundamentals/SKILL.md",
+      "computedHash": "581ea3bb684f4cd2c3eeee3f9b357f3988032d1f40fb5afc2ce217ec2ecbcdaa"
+    },
+    "langgraph-human-in-the-loop": {
+      "source": "langchain-ai/langchain-skills",
+      "sourceType": "github",
+      "skillPath": "config/skills/langgraph-human-in-the-loop/SKILL.md",
+      "computedHash": "f98bc8e16c416b859bebf6126009d637b72a26d510d234c296a774d79736ead9"
+    },
+    "langgraph-persistence": {
+      "source": "langchain-ai/langchain-skills",
+      "sourceType": "github",
+      "skillPath": "config/skills/langgraph-persistence/SKILL.md",
+      "computedHash": "7538756e423b3da5ce25b6c7f99070792214a9c7a51510e9579a40a190e88ccd"
+    },
+    "langgraph-typescript-quickstart": {
+      "source": "langchain-ai/langchain-skills",
+      "sourceType": "github",
+      "skillPath": "config/skills/langgraph-typescript-quickstart/SKILL.md",
+      "computedHash": "6ec171c34aa155308af416b7cb2f8be64f6226ee7e2be4dca9d6180bb2d47081"
+    },
+    "microsoft-foundry": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/microsoft-foundry/SKILL.md",
+      "computedHash": "3a10c771ca56a3dd19ccbda3d437dca9fa4733d6b2089b7243cd613f63507671"
+    },
+    "react-core": {
+      "source": "CopilotKit/CopilotKit",
+      "sourceType": "github",
+      "skillPath": "skills/react-core/SKILL.md",
+      "computedHash": "65409df405c82a1b2a3a7145df2ba6e3cf56701bd9c7c3b26c9d5fc4e3af8953"
+    },
+    "runtime": {
+      "source": "CopilotKit/CopilotKit",
+      "sourceType": "github",
+      "skillPath": "skills/runtime/SKILL.md",
+      "computedHash": "539d7e8bded6eb5949bb377c45072fe273015f8e0182349b880803eaf458398a"
+    },
+    "setup-slack-channel": {
+      "source": "CopilotKit/CopilotKit",
+      "sourceType": "github",
+      "skillPath": "skills/setup-slack-channel/SKILL.md",
+      "computedHash": "c4f473a29e1a567b9b6db15cbb86fc7dd874f0a9691700674f23ed49e1b4c992"
+    },
+    "update-avm-modules-in-bicep": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/update-avm-modules-in-bicep/SKILL.md",
+      "computedHash": "8071b53c14b949325cb055b69eb44afee07d5166d73ab5799205377880198277"
+    },
+    "zod": {
+      "source": "pproenca/dot-skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/zod/SKILL.md",
+      "computedHash": "e15dbf6f7f4f81616843cf855cbc984ad301455c7e298d7820c02fb3280e16f3"
+    }
+  }
+}

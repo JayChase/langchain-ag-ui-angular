@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/.angular
+**/.git
+**/.gitignore
+**/coverage
+**/.env
+**/README.md
+npm-debug.log
+.azure
+infra
+docs

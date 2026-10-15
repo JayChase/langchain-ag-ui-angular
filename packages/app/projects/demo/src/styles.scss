@@ -1,0 +1,30 @@
+@import 'normalize.css';
+@import '@copilotkit/angular/styles.css';
+
+:root {
+  --color-bg: #0d091a;
+  --color-surface: #0a0a0a;
+  --color-text: #f0eef6;
+  --color-text-muted: #9f9ab8;
+
+  --color-primary: #ff007f;
+  --color-primary-hover: #e00070;
+  --color-primary-fg: #ffffff;
+
+  --color-accent: #00f0ff;
+  --color-accent-hover: #00d2e0;
+
+  --color-border: rgba(255, 0, 127, 0.4);
+  --color-border-accent: rgba(0, 240, 255, 0.4);
+
+  --font-family-base: 'Oxanium', system-ui, -apple-system, sans-serif;
+}
+
+html,
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family-base);
+  margin: 0;
+  height: 100%;
+}

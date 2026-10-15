@@ -1,0 +1,47 @@
+{
+	"servers": {
+		"angular-cli": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@angular/cli",
+				"mcp"
+			],
+			"type": "stdio"
+		},
+		"io.github.github/github-mcp-server": {
+			"type": "http",
+			"url": "https://api.githubcopilot.com/mcp/",
+			"headers": {
+				"Authorization": "${input:Authorization}"
+			}
+		},
+		"microsoftdocs/mcp": {
+			"type": "http",
+			"url": "https://learn.microsoft.com/api/mcp"
+		},
+		"Docs by LangChain": {
+			"url": "https://docs.langchain.com/mcp",
+			"type": "http"
+		},
+		"io.github.ChromeDevTools/chrome-devtools-mcp": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"--registry",
+				"https://registry.npmjs.org",
+				"chrome-devtools-mcp@1.0.1"
+			],
+			"gallery": "https://api.mcp.github.com",
+			"version": "1.0.1"
+		}
+	},
+	"inputs": [
+		{
+			"id": "Authorization",
+			"type": "promptString",
+			"description": "Authentication token (PAT or App token)",
+			"password": true
+		}
+	]
+}
