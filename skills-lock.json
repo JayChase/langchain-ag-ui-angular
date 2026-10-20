@@ -17,7 +17,7 @@
       "source": "angular/skills",
       "sourceType": "github",
       "skillPath": "angular-developer/SKILL.md",
-      "computedHash": "390535a21ca293acbef16e588cfd77f954b0f0eae23d45477b47b0b0ce00eb47"
+      "computedHash": "4f5c15393807fbdfa0c5bed201732b94d903fe010ca1de99ea1b11eadc95f481"
     },
     "angular-new-app": {
       "source": "angular/skills",
@@ -29,13 +29,13 @@
       "source": "microsoft/azure-skills",
       "sourceType": "github",
       "skillPath": "skills/azure-ai/SKILL.md",
-      "computedHash": "98ac27fb19c03c66e1b9654cd6915eeab472a8fcccdaa058a2571f8b10ce7e6b"
+      "computedHash": "7fe816e07a80a090227ce2e2d2b7dc16c35f9bee7f955d6bcaedc2acfffbfab9"
     },
     "azure-deploy": {
       "source": "microsoft/azure-skills",
       "sourceType": "github",
       "skillPath": "skills/azure-deploy/SKILL.md",
-      "computedHash": "b51dc940fc7c4dcc585fcd35539b4461efebaa2864255bedf0c736189c10c0cf"
+      "computedHash": "0d98554cc1a2b306ea93fce87d2f6d939f35a714edab45eaf71701850a67989c"
     },
     "azure-deployment-preflight": {
       "source": "github/awesome-copilot",
@@ -53,13 +53,13 @@
       "source": "microsoft/azure-skills",
       "sourceType": "github",
       "skillPath": "skills/azure-enterprise-infra-planner/SKILL.md",
-      "computedHash": "daddd394f136796da3901dee7251ba076c18a9b1b3ede9b95c6c202c62893a92"
+      "computedHash": "34cbb8d4a4942752e93fc06e6ee00ac7b1b0bdf4ac25bbc858a2c40ca77ee3e4"
     },
     "azure-kubernetes": {
       "source": "microsoft/azure-skills",
       "sourceType": "github",
       "skillPath": "skills/azure-kubernetes/SKILL.md",
-      "computedHash": "dc9cb1e99539161a3442f95ef6f2fbca6e6722626008d1cca147b4c32b525ac6"
+      "computedHash": "9a81ecf70f8b12e77d7fd6ac9bcd307a0fbab15b21f74c0870b72d4da40af633"
     },
     "azure-messaging": {
       "source": "microsoft/azure-skills",
@@ -71,13 +71,13 @@
       "source": "microsoft/azure-skills",
       "sourceType": "github",
       "skillPath": "skills/azure-storage/SKILL.md",
-      "computedHash": "e59d7982fb1a61df19dde417ece3689b299c37a471792ca9d2968e2cba9ddbf6"
+      "computedHash": "ea37d82fa1da6fc5a62930a2c8932bc0c58b04d97d65ac672e074eb41b48d053"
     },
     "channels-setup": {
       "source": "CopilotKit/CopilotKit",
       "sourceType": "github",
       "skillPath": "skills/channels-setup/SKILL.md",
-      "computedHash": "8c3d3efd131fbea6d7b5934f8b0bd04ae357694ecd3fd38ccfdd1633f649c227"
+      "computedHash": "6003deee5d2c40ac403479d13adf89a1f1b66d11e4513092bc88a047561a2ddc"
     },
     "copilotkit-agui": {
       "source": "CopilotKit/CopilotKit",
@@ -89,7 +89,7 @@
       "source": "CopilotKit/CopilotKit",
       "sourceType": "github",
       "skillPath": "skills/copilotkit-channels/SKILL.md",
-      "computedHash": "901c5aebf9971667f0f8bf8693b1f745383ca53ba0b3046f5436455c426a9501"
+      "computedHash": "f495fa5ba5fa15b7afac8670d43a8a53d139074f15ecb357f6f62bbf0aea95e1"
     },
     "copilotkit-contribute": {
       "source": "CopilotKit/CopilotKit",
@@ -179,7 +179,7 @@
       "source": "langchain-ai/langchain-skills",
       "sourceType": "github",
       "skillPath": "config/skills/langgraph-fundamentals/SKILL.md",
-      "computedHash": "581ea3bb684f4cd2c3eeee3f9b357f3988032d1f40fb5afc2ce217ec2ecbcdaa"
+      "computedHash": "15d38ee836230e438415a256faf54a19eeb08789033aa1211dc113241a42f274"
     },
     "langgraph-human-in-the-loop": {
       "source": "langchain-ai/langchain-skills",
@@ -203,7 +203,7 @@
       "source": "microsoft/azure-skills",
       "sourceType": "github",
       "skillPath": "skills/microsoft-foundry/SKILL.md",
-      "computedHash": "3a10c771ca56a3dd19ccbda3d437dca9fa4733d6b2089b7243cd613f63507671"
+      "computedHash": "49e0d9e53c45f5edbacd27d803a45d43fc76f3dcc1894477a439b0858f894503"
     },
     "react-core": {
       "source": "CopilotKit/CopilotKit",
@@ -221,7 +221,7 @@
       "source": "CopilotKit/CopilotKit",
       "sourceType": "github",
       "skillPath": "skills/setup-slack-channel/SKILL.md",
-      "computedHash": "c4f473a29e1a567b9b6db15cbb86fc7dd874f0a9691700674f23ed49e1b4c992"
+      "computedHash": "aad78faffeaa2814128b6d6efdc6db3427a740382702b75dfa5c8dfbe3b71e64"
     },
     "update-avm-modules-in-bicep": {
       "source": "github/awesome-copilot",

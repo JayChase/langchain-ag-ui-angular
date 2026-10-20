@@ -1,35 +1,40 @@
 # Deploy a Foundry Agent
 
 Provision Azure resources when needed, deploy the agent, and smoke-test it.
-
-For **hosted agents** (custom container or code), use `azd deploy`. Prefer **direct code deployment through azd** (no Docker/ACR required): the agent's `azure.yaml` service block must contain `codeConfiguration:`, so `azd deploy` will use direct code deployment and zip the source and let Foundry build it. Use container/ACR deployment only when the agent truly needs a Dockerfile, custom system packages, or a pre-built image.
-
-For **prompt agents** (LLM + instructions, no custom code), use the Foundry MCP `agent_update` tool.
+For **hosted agents** (custom container or code), use `azd deploy`.
+For **Managed Harness Agents** (`kind: prompt` plus the GitHub Copilot harness), use `azd deploy`.
+For **ordinary prompt agents**, use the Foundry MCP `agent_update` tool.
 
 ## Quick Reference
 
 | Property | Value |
 |----------|-------|
-| Hosted (recommended) | `azd provision` when needed, direct code deployment via `azd deploy` (`codeConfiguration` present), then verify and invoke |
-| Hosted (container) | `azd provision` when needed, container/ACR deployment via `azd deploy` (requires Docker/Podman + ACR, no `codeConfiguration:` in the `azure.yaml` service block) |
+| Hosted (recommended) | `azd provision` when needed, code deploy via `azd deploy` (`codeConfiguration` present), then verify and invoke |
+| Hosted (container) | `azd provision` when needed, container deploy via `azd deploy` (remote builds require a Dockerfile and ACR; local builds also require Docker; no `codeConfiguration:` in the `azure.yaml` service block) |
+| Managed Harness Agent | `azd provision` when needed, then declarative `azd deploy`; no code/container packaging |
 | Prompt MCP | `agent_definition_schema_get`, `agent_update`, `agent_get`, `agent_delete` |
 | Versioning | Each successful `azd deploy` creates an immutable agent version |
 | Endpoint-only patch | `azd ai agent endpoint update` (no new version) |
 | Local dev | [create-hosted](../create/create-hosted.md), [local-run](../create/references/local-run.md) |
 
-## Hosted vs Prompt
+## Route by Agent Type
 
 - Shipping Python / .NET code -> **Hosted** (azd workflow below).
-- Updating only model / instructions / tools -> **Prompt** (MCP workflow below).
+- Explicit `kind: prompt` plus `harness.type: github_copilot_preview` -> **Managed Harness Agent** (azd workflow below).
+- Ordinary Prompt Agent model / instructions / tools -> **Prompt** (MCP workflow below).
 
-## Deployment Method Selection -- Hosted agents
+## Deploy Mode Selection -- Hosted agents
+
+Follow the user's explicit deploy mode preference or the existing project configuration. Otherwise, use **code deploy through azd** by default (no Docker/ACR required): the agent's `azure.yaml` service block must contain `codeConfiguration:`, so `azd deploy` will zip the source and let Foundry build it. If `azd deploy` prints `Packaging container` for an agent that does not need container-specific behavior, add or fix `codeConfiguration` and retry.
+
+When the agent depends on Dockerfile behavior, system packages, or a pre-built image, or when the user explicitly asks to build or deploy a container image, mentions Container/Docker Image/Azure Container Registry (ACR), or supplies a pre-built image, use container deploy.
 
 Before running `azd deploy`, inspect the agent's service block in `azure.yaml`.
 
 | Service block state | Deployment path |
 |------------------|-----------------|
-| `codeConfiguration:` present | **Direct code deploy** through `azd deploy`; no Docker/ACR build. |
-| No `codeConfiguration:` | **Container/ACR deploy** through `azd deploy`; builds/pushes an image or uses a pre-built `image:`. |
+| `codeConfiguration:` present | **Code deploy** through `azd deploy`; no Docker/ACR build. |
+| No `codeConfiguration:` with `language: docker` | **Container deploy** through `azd deploy`. |
 
 `codeConfiguration:` example in the `azure.yaml` service block:
 
@@ -43,7 +48,16 @@ services:
       dependencyResolution: remote_build
 ```
 
-Default to direct code for standard hosted-agent code. If `azd deploy` prints `Packaging container` for an agent that does not need container-specific behavior, add or fix `codeConfiguration` and retry. Use the container path when the agent depends on Dockerfile behavior, system packages, or a pre-built image.
+Remote ACR build example in the `azure.yaml` service block:
+
+```yaml
+services:
+  <agent-name>:
+    host: azure.ai.agent
+    language: docker
+    docker:
+      remoteBuild: true
+```
 
 ## Workflow -- Hosted agent (azd)
 
@@ -51,14 +65,23 @@ Default to direct code for standard hosted-agent code. If `azd deploy` prints `P
 
 ### Step 1 -- Resolve azd environment
 
-If the user provided an existing project endpoint, project ARM ID, or model deployment, set those values before deploy. Then verify the azd environment with `azd env get-values`.
+If the user provided an existing project endpoint, project ARM ID, or model deployment, set those values before deploy:
 
 ```bash
 azd env set AZURE_AI_PROJECT_ENDPOINT "<project-endpoint>"
 azd env set AZURE_AI_PROJECT_ID "<project-arm-id>"
 azd env set AZURE_AI_MODEL_DEPLOYMENT_NAME "<model-deployment-name>"
-azd env get-values
 ```
+
+If using container deploy and the user provided an existing ACR, set:
+
+```bash
+azd env set AZURE_CONTAINER_REGISTRY_NAME "<acr-name>"
+azd env set AZURE_CONTAINER_REGISTRY_ENDPOINT "<acr-login-server>"
+azd env set AZURE_CONTAINER_REGISTRY_RESOURCE_ID "<acr-resource-id>"
+```
+
+Verify the azd environment with `azd env get-values`.
 
 Run:
 
@@ -75,7 +98,7 @@ Branch on output: `not_deployed` -> Step 2. `active` / `deployed` -> redeploy (s
 
 > 🚦 **Project-selection gate.** If no foundry project endpoint is configured (not in the message, `azd env`, or `.env`) and the user hasn't asked to create one, stop and ask them to pick an existing foundry project or confirm creating a new one — don't silently select.
 
-Skip `azd provision` when the user gave you an existing `AZURE_AI_PROJECT_ENDPOINT` or `FOUNDRY_PROJECT_ENDPOINT` and the workflow only needs to deploy the agent into that project.
+Skip `azd provision` when the user gave you an existing `AZURE_AI_PROJECT_ENDPOINT` or `FOUNDRY_PROJECT_ENDPOINT` and no infrastructure changes are needed. If container deploy needs a new ACR, run `azd provision` even when using an existing Foundry project.
 
 Run provision only for new projects or real infrastructure changes:
 
@@ -93,11 +116,30 @@ What this does:
 - Creates connections declared as top-level `azure.ai.connection` services. `${PARAM_*}` placeholders resolve from the active azd env.
 - Wires model deployments, AI Search, ACR, etc. `infra/layers/` provision in parallel when present.
 
-This is a core `azd` command. Skip provision when the user gave you an existing `AZURE_AI_PROJECT_ENDPOINT` via `azd env set` -- the extension uses the existing project as-is.
-
 After provision completes for a new project, run `azd env get-values` and set missing required azd env values, especially `AZURE_AI_PROJECT_ID` and `AZURE_TENANT_ID`, before local run or the first `azd deploy`.
 
-### Step 3 -- Deploy the agent
+### Step 3 -- Pre-deployment check
+
+Branch by deploy mode.
+
+#### Code deploy
+
+Run `azd env get-values` and verify that these values are set for the intended
+environment:
+
+- `AZURE_AI_PROJECT_ENDPOINT`
+- `AZURE_AI_PROJECT_ID`
+- `AZURE_AI_MODEL_DEPLOYMENT_NAME`
+- `AZURE_TENANT_ID`
+
+#### Container deploy
+
+Complete the [Container Deploy Precheck](references/container-deploy.md)
+before continuing.
+
+### Step 4 -- Deploy the agent
+
+> **Private package index:** If `azd deploy` fails and the user's `uv.lock` points to a private Python package index, the Foundry service might be unable to access the index when installing dependencies. Guide the user to regenerate `uv.lock` using the public PyPI index, or export the locked dependencies to a `requirements.txt` file with pinned versions, and then retry the deployment.
 
 ```bash
 azd deploy --no-prompt
@@ -108,7 +150,7 @@ azd deploy <service-name> --no-prompt
 What deploy does:
 
 - Reads the agent's `azure.yaml` service block, packages the agent, uploads it, and registers a new immutable version.
-- **Direct code deploy** (`codeConfiguration` present): zips source, excludes `.agentignore`, and lets Foundry build the runtime image.
+- **Code deploy** (`codeConfiguration` present): zips source, excludes `.agentignore`, and lets Foundry build the runtime image.
 - **Container deploy** (no code configuration): builds the `Dockerfile`, pushes to the project's ACR, registers the version. When the service block has `image:` set, `azd` reuses the pre-built image.
 
 After deploy, azd writes `AGENT_<SVC>_NAME`, `AGENT_<SVC>_VERSION`, and `AGENT_<SVC>_<PROTO>_ENDPOINT` (one per protocol) into the active env.
@@ -117,9 +159,9 @@ For agents with Activity protocol, `azd deploy` also generates `<service-dir>/TE
 
 Re-deploying an identical build still creates a new version; `azd` prints `Agent version <n> is already active.` and skips the poll.
 
-If deploy reports `Done` for the service and then fails only in `postdeploy` with `Agent <service-name> with version <n> not found`, the `azure.yaml` service key and the service's `name:` were mismatched. Rename the `azure.yaml services` key to the deployed agent name and rerun `azd deploy --no-prompt`; do not switch deployment method.
+If deploy reports `Done` for the service and then fails only in `postdeploy` with `Agent <service-name> with version <n> not found`, the `azure.yaml` service key and the service's `name:` were mismatched. Rename the `azure.yaml services` key to the deployed agent name and rerun `azd deploy --no-prompt`; do not switch deploy mode.
 
-### Step 4 -- Verify and invoke
+### Step 5 -- Verify and invoke
 
 ```bash
 azd ai agent show --output json
@@ -141,9 +183,9 @@ For the Activity protocol, `azd ai agent invoke` won't work; follow [invoke](../
 
 Run one remote invocation only unless the user explicitly asked to test multi-turn/session behavior. A single successful response is enough for the deployment smoke test. Anything other than a completed/successful response -> run `azd ai agent doctor --output json`, then follow [troubleshoot](../troubleshoot/troubleshoot.md).
 
-### Step 5: Auto-Generate Evaluation Suite (MANDATORY — RUNS AUTOMATICALLY)
+### Step 6: Auto-Generate Evaluation Suite (MANDATORY — RUNS AUTOMATICALLY)
 
-> ⚠️ **Pre-summary gate.** If you are about to write a deployment summary or Playground link and Step 5 has not run, you are violating this skill. Run Step 5 first.
+> ⚠️ **Pre-summary gate.** If you are about to write a deployment summary or Playground link and Step 6 has not run, you are violating this skill. Run Step 6 first.
 
 This step runs automatically after deploy. Ask the user which source to use and start it right after deploy succeeds — with `--no-wait`, `generate` returns in seconds and generation runs server-side, so it overlaps with invoke/test steps and finishes faster overall.
 
@@ -158,9 +200,9 @@ This step runs automatically after deploy. Ask the user which source to use and 
 
 Other useful flags on `generate`: `--dataset <path-or-name>` to reuse an existing dataset instead of generating one, `--evaluator <name>` (repeatable) to pin built-in or custom evaluators, `--eval-model <name>` to choose the model used for generation and evaluation, `--reset-defaults` to overwrite an existing eval config, `--name <suite-name>` and `--out-file <path>` (default `eval.yaml`).
 
-Then proceed to Step 6. See [After Deployment — Auto-Generate Evaluation Suite](#after-deployment--auto-generate-evaluation-suite) for run/refresh details. Run `azd ai agent eval run` only after the user explicitly agrees.
+Then proceed to Step 7. See [After Deployment — Auto-Generate Evaluation Suite](#after-deployment--auto-generate-evaluation-suite) for run/refresh details. Run `azd ai agent eval run` only after the user explicitly agrees.
 
-### Step 6 -- Hand off
+### Step 7 -- Hand off
 
 - Send more messages -> [invoke](../invoke/invoke.md)
 - Evaluate / optimize -> [observe](../observe/observe.md)
@@ -169,7 +211,7 @@ Then proceed to Step 6. See [After Deployment — Auto-Generate Evaluation Suite
 
 ## `.agentignore`
 
-`azd ai agent init` writes a default `<service-dir>/.agentignore` for code-deploy projects (gitignore syntax) that excludes tooling files, secrets, language artifacts, and Docker files from the deploy ZIP. Only the root file is read; use `!path` to force-include.
+`azd ai agent init` writes a default `<service-dir>/.agentignore` for code deploy projects (gitignore syntax) that excludes tooling files, secrets, language artifacts, and Docker files from the deploy ZIP. Only the root file is read; use `!path` to force-include.
 
 ## Endpoint or card edits -- no new version
 
@@ -199,9 +241,10 @@ Each env has its own `AGENT_<SVC>_*` vars.
 | `missing_project_endpoint` | Run `azd env set AZURE_AI_PROJECT_ENDPOINT <url>`, or run `azd provision` for a new project. |
 | `invalid_agent_manifest` | `azd ai agent doctor`; fix the named field. |
 | `invalid_connection` | Inspect with `azd ai connection show <name>`. |
-| Docker daemon not running | You are on the container path. Add/fix `codeConfiguration` and retry direct code deploy. Only install Docker or try remote image build if you specifically need container deploy. |
-| ACR push 403 | Foundry project RBAC is missing `AcrPush` for your identity. Consider switching to direct code deployment to avoid ACR entirely. |
-| `container registry endpoint not found` | ACR is not configured. Use `azd env set AZURE_CONTAINER_REGISTRY_ENDPOINT <url>`, or switch to direct code deployment. |
+| Docker daemon not running | You are on the container path. Add/fix `codeConfiguration` and retry code deploy. Only install Docker or try remote image build if you specifically need container deploy. |
+| ACR push 403 | Foundry project RBAC is missing `AcrPush` for your identity. Consider switching to code deploy to avoid ACR entirely. |
+| `[ImageError] Container registry authentication failed` | The Foundry project managed identity lacks **AcrPull**, or **Container Registry Repository Reader** on an ABAC registry. Grant it before retrying. |
+| `container registry endpoint not found` | ACR is not configured. Use `azd env set AZURE_CONTAINER_REGISTRY_ENDPOINT <url>`, or switch to code deploy. |
 | Agent version poll times out | Build still running; retry `azd ai agent show` after a minute. |
 | `session_not_ready` (424) | Cold start or readiness delay. Wait 15-30 seconds and retry. If persistent, use `1` CPU / `2Gi` memory minimum, verify the model deployment name, capability host, and agent identity role. |
 | `invalid value "json" for --output` from `azd ai agent invoke` | Invoke supports only `default` and `raw` currently. Retry without `--output json`. |
@@ -209,14 +252,92 @@ Each env has its own `AGENT_<SVC>_*` vars.
 | `subscription quota exceeded` | Ask user to request quota; do not auto-retry. |
 | Bicep deploy errors | Forward `error.details[]` verbatim to the user. |
 | `RoleAssignmentUpdateNotPermitted` during provision | A role assignment already exists but conflicts. Check for existing role assignments with `az role assignment list --scope <resource-scope>`. The provision may have succeeded for all resources except RBAC — verify with `azd ai project show` and manually assign the `Cognitive Services User` role to the agent identity if needed. |
-| `eval generate`: `one of --gen-instruction ... is required` | Retry with `--gen-instruction "<agent purpose>"` (Step 5 option (a)). |
+| `eval generate`: `one of --gen-instruction ... is required` | Retry with `--gen-instruction "<agent purpose>"` (Step 6 option (a)). |
 | `unknown command "init" for "azd ai agent eval"` | Command was renamed: use `azd ai agent eval generate` (requires azd CLI with `azure.ai.agents` extension up to date). |
 
 For deeper logs, see [troubleshoot](../troubleshoot/troubleshoot.md).
 
+## Workflow -- Managed Harness Agent (azd)
+
+A Microsoft Foundry Managed Harness Agent is a declarative Prompt Agent configuration that this workflow deploys with azd. Read [create-managed-harness](../create/create-managed-harness.md) before creating or editing it.
+
+### Step 1: Resolve and validate
+
+Inside the azd project, select the service and verify:
+
+```yaml
+host: azure.ai.agent
+kind: prompt
+harness:
+  type: github_copilot_preview
+```
+
+Reject Hosted-only code/container fields. Do not convert an ordinary Prompt or Hosted Agent in place.
+
+Resolve the active environment:
+
+```bash
+azd env get-values
+azd ai project show --output json
+azd ai agent show --output json
+```
+
+If the Agent is not deployed, continue to provisioning. If active/deployed, skip provisioning unless infrastructure changed.
+
+### Step 2: Provision when required
+
+Run `azd provision --no-prompt` only for a new Foundry project, a new model deployment, or another real infrastructure change. If no project is configured and the user did not select a new or existing project, stop and ask.
+
+A Managed Harness Agent does not require Hosted Agent source packaging, Docker, ACR, runtime, protocol, or container configuration.
+
+### Step 3: Deploy
+
+```bash
+azd deploy <service-name> --no-prompt
+```
+
+Deployment reads the Prompt Agent definition from `azure.yaml` and creates a new immutable version. It must not package source or build a container.
+
+### Step 4: Verify and invoke
+
+```bash
+azd ai agent show --output json
+```
+
+Verify the version is active/deployed and the published definition retains:
+
+- `kind: prompt`
+- `harness.type: github_copilot_preview`
+- Requested direct tools
+- Versioned Toolbox MCP endpoint, when explicitly configured
+- Versioned Skill references, when explicitly configured
+
+A successful deploy that drops the harness is a failure.
+
+Run one remote smoke invocation:
+
+```bash
+azd ai agent invoke <service-name> "hello, are you up?"
+```
+
+Follow the Managed Harness Agent branch in [invoke](../invoke/invoke.md). Do not use Hosted sessions/files/monitor and do not start evaluation generation in Phase 1.
+
+### Step 5: Hand off
+
+Show Agent name, version, project, model, harness, tools, optional Toolbox, deployment status, and smoke-test status.
+
+## Common failure modes -- Managed Harness Agent
+
+| Error | Fix |
+|---|---|
+| Deploy packages code/container | Remove Hosted-only fields and verify `kind: prompt` |
+| Published definition lacks harness | Fix `harness.type`, verify the extension version, and redeploy |
+| Tool shape rejected | Read the matching Managed Harness Agent tool reference and preserve REST field names |
+| Connection missing | Use a user-supplied/existing configured connection, or create it only on explicit request |
+
 ## Workflow -- Prompt agent (MCP)
 
-Prompt agents are not containerized -- they are a model + instructions + optional tools, created through the Foundry MCP server. Use when the user explicitly wants a prompt agent.
+Ordinary Prompt Agents are not containerized -- they are a model + instructions + optional tools, created through the Foundry MCP server. Do not use this branch for a Managed Harness Agent.
 
 ### MCP tools
 
@@ -260,7 +381,7 @@ This step runs automatically after deploy. Ask the user which source to use and 
 | Permission denied | User needs `Foundry User` role on the project. |
 | Model not found | Deploy the model first via [models/deploy-model](../../models/deploy-model/SKILL.md). |
 
-## Display agent details (both flows)
+## Display agent details
 
 After a successful deploy, show the agent's name, version, status, and endpoints in a table. Include a Playground link:
 
@@ -278,7 +399,7 @@ For hosted agents, `playground_url` is in `azd ai agent show --output json`.
 
 ## After Deployment — Auto-Generate Evaluation Suite
 
-> Reference for Step 5 options (a) and (b) — start `generate` right after deploy so its server-side generation overlaps with invoke/test steps and finishes faster. Options (c) and (d) skip `generate` and go straight to section 3 (run) or stop.
+> Reference for Step 6 options (a) and (b) — start `generate` right after deploy so its server-side generation overlaps with invoke/test steps and finishes faster. Options (c) and (d) skip `generate` and go straight to section 3 (run) or stop.
 
 ### 1. Inspect existing eval.yaml
 
@@ -289,7 +410,7 @@ Check the selected agent root for `eval.yaml`:
 
 ### 2. Submit generation (asynchronous, server-side)
 
-Run `azd ai agent eval generate --no-wait` with the user's chosen flags (see the Step 5 table). The command:
+Run `azd ai agent eval generate --no-wait` with the user's chosen flags (see the Step 6 table). The command:
 
 - Submits dataset + evaluator generation jobs server-side.
 - Returns in seconds.

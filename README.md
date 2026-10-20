@@ -1,23 +1,6 @@
-# agent workshop
+# Langchain ag-ui Angular
 
-> [!INFORMATION]
-> Internal template repo for ag-ui agent repos
-
-## using the files from this repo in another repo
-
-```bash
-git remote add agentWorkshop https://github.com/JayChase/agent-workshop.git
-
-# to get the latest agents
-git checkout agentWorkshop/main -- .github/agents
-
-# to get the latest instructions
-git checkout agentWorkshop/main -- .github/instructions
-
-git remote remove agentWorkshop
-```
-
-A full-stack, `azd`-deployable reference app that connects an Angular chat UI to a
+This is a full-stack, `azd`-deployable reference app that connects an Angular chat UI to a
 LangGraph agent over the [AG-UI protocol](https://docs.ag-ui.com/), via a Hono API
 gateway. Provisioned end-to-end on Azure with Bicep and the Azure Developer CLI. TODO THIS IS NOT RIGHT
 
