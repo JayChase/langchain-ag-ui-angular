@@ -2,10 +2,10 @@
 
 ## Bearer auth (gateway-aware)
 
-The API enforces bearer authentication on all endpoints, including `/health`.
+The API enforces bearer authentication on all endpoints apart from `/health`.
 
 - Requests are expected to pass through the Application Gateway.
-- The API validates JWT signature and claims (`iss`, `aud`, required scope) via `hono/jwt`.
+- The API validates JWT signature and claims (`iss`, `aud`, required scope) via `hono/jwk`.
 - The API derives the JWKS endpoint from `JWT_ISSUER` and enforces `RS256` signatures.
 - The API accepts Entra v2 (`login.microsoftonline.com/<tenant>/v2.0`) and v1 (`sts.windows.net/<tenant>/`) issuer formats for the same tenant.
 - The required delegated scope defaults to `app.use`.
@@ -20,14 +20,18 @@ JWT_REQUIRED_SCOPE=app.use
 
 `JWT_AUDIENCE` can be a comma-separated list if you need to accept more than one audience value.
 
-```
+## Getting started
+
+- Install dependencies and run
+
+```bash
 npm install
 npm run dev
 ```
 
-```
-open http://localhost:3000
-```
+- Open `http://localhost:3000`
+
+Or use the **.vscode** launch configuration `🗼 api` to run and debug.
 
 ## Building the image locally
 

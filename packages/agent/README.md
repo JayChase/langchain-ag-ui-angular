@@ -105,6 +105,8 @@ pnpm install
 pnpm --filter agent run dev
 ```
 
+Or use the **.vscode** launch configuration `🤖 agent` to run and debug.
+
 4. If you need to test the deploy profile locally:
 
 ```bash

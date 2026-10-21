@@ -252,7 +252,6 @@ azd down --purge
 
 > [!WARNING]
 > azd provision will deploy resources on paid SKUs. So please do not leave these running if you are not using them. They will cost you money.
-
 > [!WARNING]
 > azd down will not remove the Entra app registrations. Please delete those manually.
 
