@@ -15,7 +15,7 @@ Key Vault, and Application Insights.
 ## Table of Contents
 
 - [Architecture](#architecture)
-- [ag-ui tool calling example](#ag-ui-tool-calling-example)
+- [AG-UI tool calling example](#ag-ui-tool-calling-example)
 - [Prerequisites](#prerequisites)
 - [Dev Container Quick Start](#dev-container-quick-start)
 - [Local development](#local-development)
