@@ -58,11 +58,12 @@ docker build -t lg-ng-api:latest .
 ## Running the acr image locally
 
 ```bash
-export ACR_NAME=crzppo3a2ija5dm
+export ACR_NAME=$(azd env get-value AZURE_CONTAINER_REGISTRY_NAME)
+export AZURE_ENV_NAME=$(azd env get-value AZURE_ENV_NAME)
 
 az acr repository list --name $ACR_NAME -o table
 
-export API_CONTAINER=langchain-ag-ui-angular/api-lgng-test
+export API_CONTAINER=langchain-ag-ui-angular/api-$AZURE_ENV_NAME
 export CONTAINER_TAG=$(az acr repository show-tags \
   --name $ACR_NAME \
   --repository $API_CONTAINER \

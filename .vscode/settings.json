@@ -1,28 +1,4 @@
 {
-    "workbench.colorCustomizations": {
-        "editorGroupHeader.tabsBackground": "#12080F",
-        "tab.border": "#4A1839",
-        "tab.inactiveBackground": "#12080F",
-        "tab.inactiveForeground": "#C58AB0",
-        "tab.activeBackground": "#1C0D17",
-        "tab.activeForeground": "#FFF7FD",
-        "tab.unfocusedActiveForeground": "#FFF7FD",
-        "tab.activeBorder": "#FF4FD8",
-        "tab.unfocusedActiveBorder": "#FF4FD8",
-        "tab.activeBorderTop": "#FF4FD8",
-        "tab.unfocusedActiveBorderTop": "#FF4FD8",
-        "statusBar.noFolderBackground": "#4C0A64",
-        "statusBar.noFolderForeground": "#FDFAFE",
-        "activityBar.background": "#4C0A64",
-        "titleBar.activeBackground": "#6A0E8C",
-        "titleBar.activeForeground": "#FDFAFE",
-        "titleBar.inactiveBackground": "#4C0A64",
-        "titleBar.inactiveForeground": "#FDFAFE",
-        "statusBar.background": "#4C0A64",
-        "statusBar.foreground": "#FDFAFE",
-        "statusBar.debuggingBackground": "#4C0A64",
-        "statusBar.debuggingForeground": "#FDFAFE"
-    },
     "debug.terminal.clearBeforeReusing": true,
     "postman.settings.dotenv-detection-notification-visibility": false,
     "cSpell.words": [

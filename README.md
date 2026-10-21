@@ -1,4 +1,4 @@
-# Langchain AG-UI Angular
+# LangChain AG-UI Angular
 
 A streaming AI chat application with generative UI tool components, connecting an Angular (`@copilotkit/angular`) frontend to a LangGraph Server via the [AG-UI protocol](https://docs.ag-ui.com/) and `@ag-ui/langgraph` on a Hono API.
 
@@ -87,8 +87,8 @@ UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
 ```
 
 - **App** — Angular UI using `@copilotkit/angular`. Renders the chat, streams
-  assistant messages, and registers **frontend tools**. A custom Angular
-  components rendered inline for specific tool calls, e.g. a haiku tool front end tool is included in the demo app.
+  assistant messages, and registers **frontend tools**. Custom Angular
+  components are rendered inline for specific tool calls (for example, the haiku frontend tool included in the demo app).
 - **API** — a Hono server hosting the `CopilotRuntime` from `@copilotkit/runtime`.
   It terminates the **AG-UI protocol** from the App and forwards the
   conversation to the LangGraph deployment via `@ag-ui/langgraph`'s
@@ -122,13 +122,13 @@ sequenceDiagram
     Agent-->>API: AG-UI stream: tool call + tool result (japanese/english lines)
     API-->>App: Proxied AG-UI stream
     App->>App: Match tool name to registered frontend tool
-    App-->>User: Render HaikuToolCard with the generated lines
+    App-->>User: Render HaikuTool with the generated lines
 ```
 
-Adding a new tool the same way means: define the tool in
-[agent.ts](packages/agent/src/agent.ts), bind it to the model, and register a
-matching Angular component in
-[tools-registry.ts](packages/app/projects/demo/src/app/tools/tools-registry.ts)
+Adding a new tool the same way means: define the tool schema in `packages/schemas`,
+bind the tool to the model in [agent.ts](packages/agent/src/agent.ts), and register a
+matching Angular component with `registerRenderToolCall` in
+[chat.ts](packages/app/projects/demo/src/app/chat/chat.ts)
 using the same tool `name`.
 
 ### Deployed infrastructure
@@ -142,7 +142,7 @@ Foundry reachable only via private endpoints inside a VNet. See
 
 - Azure subscription with access to Azure OpenAI.
 - Git.
-- [LangSmith API key](https://docs.smith.langchain.com/administration/how_to_guides/organization_management/create_account_api_key) from an account with LangGraph Cloud access (but still free) `azd up` will prompt for it as `LANGSMITH_API_KEY`.
+- [LangSmith API key](https://docs.smith.langchain.com/administration/how_to_guides/organization_management/create_account_api_key) from an account with LangGraph Cloud access (free tier works). `azd up` will prompt for it as `LANGSMITH_API_KEY`.
 
 ## Dev Container Quick Start
 
@@ -237,8 +237,8 @@ pnpm app
 
 ### Using the app
 
-- Open the app **https://localhost:4200** and log in with you Entra account.
-- To run the example frontend tool, **haiku tool** ask the agent to write a haiku.
+- Open the app **https://localhost:4200** and log in with your Entra account.
+- To run the example frontend tool (**haiku tool**), ask the agent to write a haiku.
 
 ![haiku tool](./docs/images/haiku-frontend-toolpng.png)
 
@@ -252,6 +252,7 @@ azd down --purge
 
 > [!WARNING]
 > azd provision will deploy resources on paid SKUs. So please do not leave these running if you are not using them. They will cost you money.
+
 > [!WARNING]
 > azd down will not remove the Entra app registrations. Please delete those manually.
 
@@ -342,18 +343,13 @@ Agent scripts are pinned to profiles so they cannot be mixed up accidentally:
 - `pnpm --filter agent run dev:deploy` uses `langgraph.deploy.json`
 - `pnpm --filter agent run create-dockerfile` uses `langgraph.deploy.json`
 
-> [!WARNING]
-> The terminal container app has no ingress but still runs 24/7 once deployed —
-> set `deployTerminal` back to `false` and redeploy when you're done to avoid
-> paying for an idle container.
-
 ## Troubleshooting
 
 - **`failed logging into container registry` (401) right after `azd provision`** —
   the deployer's RBAC role assignment on the Container Registry can take a few
   minutes to propagate. Re-run `azd deploy` after a short wait; no infrastructure
   change is needed.
-- If you are using **Git Bash** for Windows as your terminal **AZD** will try to run the PowerShell hook script. To fi this manually change the windows scripts to the posix versions in the [azure.yaml](./azure.yaml) file.
+- If you are using **Git Bash** for Windows as your terminal, **AZD** will try to run the PowerShell hook script. To fix this, manually change the windows scripts to the posix versions in the [azure.yaml](./azure.yaml) file.
 
 ### Debugging the deployed environment
 
@@ -363,8 +359,8 @@ so it isn't reachable from your machine. [main.bicep](infra/main.bicep) has an
 optional `terminal` container app for reaching those endpoints from inside the
 network.
 
-- Deploy it by setting the `deployTerminal` parameter to `true`
-  `azd env set DEPLOY_TERMINAL true` and the run then `azd provision`.
+- Deploy it by setting the `deployTerminal` parameter to `true`:
+  run `azd env set DEPLOY_TERMINAL true` and then `azd provision`.
 - It is preloaded with the same connection secrets as the agent container:
   `DATABASE_URI` (Postgres), `REDIS_URI`, and `AZURE_AI_ENDPOINT`, plus
   `LANGSMITH_API_KEY` when set — so you can test connectivity with the exact
@@ -380,11 +376,16 @@ az containerapp exec \
   --command /bin/bash
 ```
 
+> [!WARNING]
+> The terminal container app has no ingress but still runs 24/7 once deployed —
+> set `deployTerminal` back to `false` and redeploy when you're done to avoid
+> paying for an idle container.
+
 ## References
 
 - [Angular CopilotKit](https://docs.copilotkit.ai/angular)
 - [Self hosted LangChain Agent Servers](https://docs.langchain.com/langsmith/deploy-standalone-server)
-- [Langgraph ag-ui](https://github.com/ag-ui-protocol/ag-ui#readme)
+- [LangGraph AG-UI](https://github.com/ag-ui-protocol/ag-ui#readme)
 - [azd](https://learn.microsoft.com/en-gb/azure/developer/azure-developer-cli/overview?tabs=linux)
 - [Azure Database for PostgreSQL](https://learn.microsoft.com/en-us/azure/postgresql/)
 - [Azure Managed Redis](https://learn.microsoft.com/en-us/azure/redis/)

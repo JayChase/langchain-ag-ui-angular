@@ -19,5 +19,5 @@ project-setup.md
 infra/cert/*.key
 infra/cert/*.pfx
 .tmp-icons
-
+.agents/skills
 ./*.temp.*
