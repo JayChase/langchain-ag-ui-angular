@@ -1,8 +1,8 @@
-# Langchain ag-ui Angular
+# Langchain AG-UI Angular
 
-This is a full-stack, `azd`-deployable reference app that connects an Angular chat UI to a
-LangGraph agent over the [AG-UI protocol](https://docs.ag-ui.com/), via a Hono API
-gateway. Provisioned end-to-end on Azure with Bicep and the Azure Developer CLI. TODO THIS IS NOT RIGHT
+A streaming AI chat application with generative UI tool components, connecting an Angular (`@copilotkit/angular`) frontend to a LangGraph Server via the [AG-UI protocol](https://docs.ag-ui.com/) and `@ag-ui/langgraph` on a Hono API.
+
+This sample demonstrates a fully self-hosted deployment on Azure Container Apps using official AG-UI and CopilotKit packages rather than a custom AG-UI protocol implementation.
 
 - **App** — Angular 22 chat UI ([packages/app](packages/app))
 - **API** — Hono gateway that bridges the UI and the agent ([packages/api](packages/api))
