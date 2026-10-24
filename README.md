@@ -191,11 +191,11 @@ cd langchain-ag-ui-angular
 pnpm i
 ```
 
-- Login (both required)
+- Sign in once with Azure CLI
 
 ```bash
+azd config set auth.useAzCliAuth true
 az login
-azd auth login
 ```
 
 - Provision the infra and deploy
