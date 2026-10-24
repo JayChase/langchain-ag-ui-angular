@@ -153,8 +153,8 @@ Foundry reachable only via private endpoints inside a VNet. See
 - Sign in
 
 ```bash
+azd config set auth.useAzCliAuth true
 az login
-azd auth login
 ```
 
 - Provision the infra and deploy the apps
