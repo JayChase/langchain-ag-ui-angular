@@ -167,4 +167,19 @@ if (Test-Path -LiteralPath $angularJsonPath) {
 Write-Host "Successfully processed template and saved to: $OutputFile" -ForegroundColor Green
 
 $outputName = Split-Path -Path $OutputFile -Leaf
+$outputDir = Split-Path -Path $OutputFile -Parent
+
+if ($outputName -eq 'environment.ts') {
+    $devOutputFile = Join-Path -Path $outputDir -ChildPath 'environment.development.ts'
+    Copy-Item -LiteralPath $OutputFile -Destination $devOutputFile -Force
+    $devContent = Get-Content -LiteralPath $devOutputFile -Raw
+    $devContent = [System.Text.RegularExpressions.Regex]::Replace(
+        $devContent,
+        '(?m)^(\s*uri:\s*).*$',
+        "`$1'http://localhost:4000/api',"
+    )
+    Set-Content -LiteralPath $devOutputFile -Value $devContent -Encoding UTF8 -NoNewline
+    Write-Host "Successfully created development environment at: $devOutputFile" -ForegroundColor Green
+}
+
 
