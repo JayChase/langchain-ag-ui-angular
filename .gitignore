@@ -14,6 +14,8 @@ setup-env.sh
 project-setup.md
 # Environment files at any level
 **/.env
+packages/app/projects/demo/src/environments/environment.ts
+packages/app/projects/demo/src/environments/environment.development.ts
 
 # Demo App Gateway certificate artifacts
 infra/cert/*.key

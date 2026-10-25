@@ -17,7 +17,7 @@
       "source": "angular/skills",
       "sourceType": "github",
       "skillPath": "angular-developer/SKILL.md",
-      "computedHash": "4f5c15393807fbdfa0c5bed201732b94d903fe010ca1de99ea1b11eadc95f481"
+      "computedHash": "479e7c8d75cb017be85ae866c610830aae12f4e38c331d758f321ac2841c2810"
     },
     "angular-new-app": {
       "source": "angular/skills",
@@ -59,7 +59,7 @@
       "source": "microsoft/azure-skills",
       "sourceType": "github",
       "skillPath": "skills/azure-kubernetes/SKILL.md",
-      "computedHash": "9a81ecf70f8b12e77d7fd6ac9bcd307a0fbab15b21f74c0870b72d4da40af633"
+      "computedHash": "94bbbae680d86f2cddfec573eee8df508995b1416e1ab5d407e65ee4e0626bfc"
     },
     "azure-messaging": {
       "source": "microsoft/azure-skills",
@@ -89,7 +89,7 @@
       "source": "CopilotKit/CopilotKit",
       "sourceType": "github",
       "skillPath": "skills/copilotkit-channels/SKILL.md",
-      "computedHash": "f495fa5ba5fa15b7afac8670d43a8a53d139074f15ecb357f6f62bbf0aea95e1"
+      "computedHash": "e453526a0ef169bedb7007b0ddaf21ac0d81c9c399fe612160d53fe99e397cd4"
     },
     "copilotkit-contribute": {
       "source": "CopilotKit/CopilotKit",
@@ -203,7 +203,7 @@
       "source": "microsoft/azure-skills",
       "sourceType": "github",
       "skillPath": "skills/microsoft-foundry/SKILL.md",
-      "computedHash": "49e0d9e53c45f5edbacd27d803a45d43fc76f3dcc1894477a439b0858f894503"
+      "computedHash": "deeee11bd6354a9112e2b5355dc66fc60008111ca1d5bedaa6b769c04051130b"
     },
     "react-core": {
       "source": "CopilotKit/CopilotKit",
