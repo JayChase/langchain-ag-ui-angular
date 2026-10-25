@@ -129,8 +129,8 @@ param postgresAdminPassword string = 'PgAdmin!${take(replace(newGuid(), '-', '')
 @description('PostgreSQL database name used by agent and api services.')
 param postgresDatabaseName string = 'agentdb'
 
-@description('Service Management Reference for the app registration')
-param serviceManagementReference string = ''
+@description('Service management reference for the app registrations. Press Enter to leave blank unless your organization requires one.')
+param serviceManagementReference string
 
 @description('Delegated API scope value used by app and API registrations.')
 param apiDelegatedScopeValue string = 'app.use'
@@ -162,9 +162,6 @@ param appExists bool
 var abbrs = loadJsonContent('abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName }
-var effectiveServiceManagementReference = empty(serviceManagementReference)
-  ? '${tenant().displayName}-${resourceToken}'
-  : serviceManagementReference
 
 // Organize resources in a resource group
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -729,7 +726,7 @@ module apiRegistration 'api-registration.bicep' = {
   params: {
     apiAppName: '${abbrs.appContainerApps}${resourceToken}-api'
     apiAppDisplayName: '${abbrs.appContainerApps}${resourceToken}-api'
-    serviceManagementReference: effectiveServiceManagementReference
+    serviceManagementReference: serviceManagementReference
     delegatedScopes: apiDelegatedScopes
     appRoleAssignmentRequired: true
   }
@@ -743,7 +740,7 @@ module appRegistration 'app-registration.bicep' = {
     clientAppDisplayName: app.outputs.name
     webAppIdentityId: app.outputs.resourceId
     issuer: issuer
-    serviceManagementReference: effectiveServiceManagementReference
+    serviceManagementReference: serviceManagementReference
     redirectUris: ['https://localhost:4200/redirect', 'https://${applicationGateway.outputs.publicIpAddress}/redirect']
     apiAppId: apiRegistration.outputs.apiAppId
     apiScopeIds: apiRegistration.outputs.apiScopeIds

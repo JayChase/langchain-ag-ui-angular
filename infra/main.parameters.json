@@ -39,7 +39,7 @@
       "value": "${RECOVER_KEY_VAULT=false}"
     },
     "serviceManagementReference": {
-      "value": "${AZURE_SERVICE_MANAGEMENT_REFERENCE=}"
+      "value": "${AZURE_SERVICE_MANAGEMENT_REFERENCE}"
     },
     "chatModels": {
       "value": [

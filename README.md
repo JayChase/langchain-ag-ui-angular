@@ -143,6 +143,7 @@ Foundry reachable only via private endpoints inside a VNet. See
 - Azure subscription with access to Azure OpenAI.
 - Git.
 - [LangSmith API key](https://docs.smith.langchain.com/administration/how_to_guides/organization_management/create_account_api_key) from an account with LangGraph Cloud access (free tier works). `azd up` will prompt for it as `LANGSMITH_API_KEY`.
+- **Service management reference (optional)** — `azd up` also prompts for `serviceManagementReference`. Press Enter to leave it blank unless your organization requires a service-management reference on Entra app registrations. If it does, get the value from your service owner or identity administration team; do not invent one. See the [Microsoft Graph application properties](https://learn.microsoft.com/en-us/graph/api/resources/application?view=graph-rest-1.0#properties) for the property definition. To avoid the prompt, create the environment first with `azd env new <name>`, then run `azd env set AZURE_SERVICE_MANAGEMENT_REFERENCE <value>`.
 
 ## Dev Container Quick Start
 
@@ -348,6 +349,8 @@ Agent scripts are pinned to profiles so they cannot be mixed up accidentally:
   the deployer's RBAC role assignment on the Container Registry can take a few
   minutes to propagate. Re-run `azd deploy` after a short wait; no infrastructure
   change is needed.
+- **`ServiceTreeValueNotGuid: Value for ServiceManagementReference must be a valid GUID`** when creating the app registrations —
+  your tenant requires a service-management reference (a Service Tree GUID in Microsoft-internal tenants). Get the approved value from your service owner, then run `azd env set AZURE_SERVICE_MANAGEMENT_REFERENCE <guid>` and re-run `azd up`. See the [troubleshooting guide](https://aka.ms/service-management-reference-error) (requires access to Microsoft-internal documentation).
 - If you are using **Git Bash** for Windows as your terminal, **AZD** will try to run the PowerShell hook script. To fix this, manually change the windows scripts to the posix versions in the [azure.yaml](./azure.yaml) file.
 
 ### Debugging the deployed environment
