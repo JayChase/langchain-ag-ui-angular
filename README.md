@@ -245,12 +245,14 @@ pnpm app
 
 ## Clean up
 
-Remove all the deployed resources.
+Remove all the deployed resources and select **Yes** when prompted to permanently delete soft-deleted resources.
 
 ```bash
-azd down --purge
+azd down
 ```
 
+> [!NOTE]
+> Run `azd down` without the `--purge` flag and confirm the purge interactively when prompted. Passing `--purge` directly on the command line causes `azd` to force-delete the Log Analytics workspace before the resource group is removed, which fails with `CannotDeleteWorkspaceWhenLinkedToPrivateLinkScopes` while the Azure Monitor Private Link Scope is still attached.
 > [!WARNING]
 > azd provision will deploy resources on paid SKUs. So please do not leave these running if you are not using them. They will cost you money.
 > [!WARNING]
