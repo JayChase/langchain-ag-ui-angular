@@ -7,10 +7,9 @@ vi.mock('./middleware/bearer-auth.js', () => ({
 }));
 
 describe('local runtime routes', () => {
-  it('serves the real CopilotKit info endpoint under the configured prefix', async () => {
+  it('serves the real CopilotKit info endpoint with the local API prefix', async () => {
     const settings = EnvSchema.parse({
       LOCAL_DEV: 'true',
-      API_BASE_PATH: '/api',
       CORS_WHITELIST: 'https://localhost:4200',
       AGENT_URI: 'http://localhost:2024',
       GRAPH_ID: 'agent',
@@ -20,5 +19,7 @@ describe('local runtime routes', () => {
     });
     const response = await createApp(settings).request('/api/info');
     expect(response.status).toBe(200);
+    const deployedResponse = await createApp(settings).request('/info');
+    expect(deployedResponse.status).toBe(200);
   });
 });

@@ -93,7 +93,6 @@ hooks:
   const post = execute('postprovision');
   assert.equal(post.status, 0, `${post.stdout}${post.stderr}`);
   assert.match(readFileSync(join(app, 'environment.ts'), 'utf8'), /http:\/\/localhost:4000\/api/);
-  assert.equal(parseEnv(readFileSync(join(root, 'packages', 'api', '.env'), 'utf8')).API_BASE_PATH, '/api');
   writeFileSync(envFile, 'AZURE_ENV_NAME="fixture"\nMINIMAL="false"\n');
   const full = execute('preup');
   assert.equal(full.status, 0, `${full.stdout}${full.stderr}`);

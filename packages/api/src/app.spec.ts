@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from './app.js';
-import { createCopilotRuntimeHandler } from '@copilotkit/runtime/v2';
 import type { Settings } from './models/settings.js';
 
 vi.mock('./middleware/bearer-auth.js', () => ({
@@ -35,7 +34,6 @@ describe('App routes and CORS', () => {
     localDev: false,
     langsmithKey: 'test',
     agentUri: 'http://localhost:8000',
-    apiBasePath: '/',
     corsWhitelist: ['https://allowed-origin.com'],
     graphId: 'test-graph',
     jwtIssuer: 'https://login.microsoftonline.com/tenant/v2.0',
@@ -90,17 +88,6 @@ describe('App routes and CORS', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual({ copilot: 'response' });
-  });
-
-  it('uses the local API prefix without changing the deployed route', async () => {
-    await createApp({ ...dummySettings, localDev: true, apiBasePath: '/api' }).request('/api/info');
-    expect(createCopilotRuntimeHandler).toHaveBeenLastCalledWith(
-      expect.objectContaining({ basePath: '/api' }),
-    );
-    await createApp(dummySettings).request('/info');
-    expect(createCopilotRuntimeHandler).toHaveBeenLastCalledWith(
-      expect.objectContaining({ basePath: '/' }),
-    );
   });
 
   it('should block requests when auth fails in middleware', async () => {

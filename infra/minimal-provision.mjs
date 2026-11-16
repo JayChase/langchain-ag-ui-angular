@@ -119,7 +119,7 @@ export function generateLocalConfig(values, directory = root) {
   writeFileSync(join(templateDir, 'environment.development.ts'), content);
   updateEnv(join(directory, 'packages', 'api', '.env'), {
     LOCAL_DEV: 'true', PORT: '4000', CORS_WHITELIST: 'https://localhost:4200',
-    AGENT_URI: 'http://localhost:2024', GRAPH_ID: 'agent', API_BASE_PATH: '/api',
+    AGENT_URI: 'http://localhost:2024', GRAPH_ID: 'agent',
     JWT_ISSUER: required(values, 'API_ENV_JWT_ISSUER'),
     JWT_AUDIENCE: required(values, 'API_ENV_JWT_AUDIENCE'),
     JWT_REQUIRED_SCOPES: required(values, 'API_ENV_JWT_REQUIRED_SCOPES'),
