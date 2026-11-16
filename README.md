@@ -19,6 +19,7 @@ Key Vault, and Application Insights.
 - [Prerequisites](#prerequisites)
 - [Dev Container Quick Start](#dev-container-quick-start)
 - [Local development](#local-development)
+- [Cost-Conscious Local Development Setup](#-cost-conscious-local-development-setup)
 - [Working with the code](#working-with-the-code)
 - [Clean up](#clean-up)
 - [User authentication (OpenID Connect)](#user-authentication-openid-connect)
@@ -205,57 +206,176 @@ az login
 azd up
 ```
 
-### Cost-conscious local development
+## 💰 Cost-Conscious Local Development Setup
 
-For local development, create a **new** environment and opt into minimal
-provisioning instead of `azd up`:
+Minimal mode is a lower-cost option for local development. It provisions the
+Azure services needed to run the Agent, API and App locally, while skipping more
+expensive application-hosting and production infrastructure. It is **not** a
+production deployment or production-ready architecture, and it is not free:
+Azure AI usage can still incur charges. Use the full deployment for production.
+
+| Minimal mode keeps for local development | Full deployment only |
+| --- | --- |
+| Azure AI resource and consumption-based model | Application Gateway, public IP, demo certificate generation |
+| Entra API/SPA registrations and developer AI access | Container Apps/environment, ACR, managed identities |
+| Resource group | PostgreSQL, Redis, VNet, private endpoints/DNS, Key Vault, certificate storage, monitoring stack |
+
+This project runs a separate LangGraph development server. It uses local
+development storage, so minimal mode does **not** provision PostgreSQL or Redis.
+The omitted monitoring stack includes Application Insights, Log Analytics,
+the dashboard and Azure Monitor Private Link Scope (AMPLS).
+
+### Set up and provision
+
+Install the dependencies from the repository root if you have not already:
+
+```bash
+pnpm i
+```
+
+Create a **new** azd environment and opt into minimal mode:
 
 ```bash
 azd env new langchain-minimal
 azd env set MINIMAL true
+```
+
+Configure azd to use Azure CLI authentication, then sign in:
+
+```bash
+azd config set auth.useAzCliAuth true
+az login
+```
+
+Provision the resources:
+
+```bash
 azd provision
 ```
 
-Select the intended subscription and regions when prompted. The deployment creates
-Azure AI and its model, the Entra API/SPA registrations, and developer AI
-access. It does not create Application Gateway, hosted containers, Redis,
-PostgreSQL, private networking, Key Vault or monitoring. Azure AI usage and any
-other retained services still incur charges; this is not a production setup.
+When azd prompts, select the intended subscription, primary region, and model
+region. You normally select a subscription in this prompt; you do **not** need to
+look up or manually enter its ID.
 
-The provision hook discovers your public IPv4 address and allows it through the
-Azure AI firewall, which otherwise denies access. Re-run `azd provision` if your
-IP changes; existing AI IP rules are preserved. Remove obsolete rules manually
-and do not open access to the whole internet. If an existing environment has
-lost its subscription setting, restore its original `AZURE_SUBSCRIPTION_ID`
-before reprovisioning. A new azd environment does not guarantee a new Azure
-resource group: check the intended subscription and resource group before
-provisioning, and restore lost deployment state rather than reusing an existing
-deployment. Assign your user to both enterprise applications and
-grant the required consent as described in the authentication section below.
+> **Recovering an existing environment:** If an environment already has
+> deployment outputs but its saved subscription setting is missing, restore the
+> exact subscription used by that deployment before retrying. The provisioning
+> hook reads existing AI firewall rules from that subscription, so do not
+> substitute the Azure CLI's current default subscription.
+>
+> ```bash
+> azd env set AZURE_SUBSCRIPTION_ID <original-subscription-id> --environment langchain-minimal
+> ```
 
-Provisioning generates ignored local configuration for all three packages. Set
-`LANGSMITH_API_KEY` in `packages/agent/.env` if it was not supplied during
-provisioning, and protect this file as a credential. Sign in with `az login`,
-then run these commands in separate terminals:
+You need Azure AI model access and quota, Azure resource/RBAC permissions, and
+the Microsoft Graph permissions required to create the Entra registrations.
+Node.js 24+ is required for the cross-platform provisioning hooks. Have your
+LangSmith API key ready for the `LANGSMITH_API_KEY` provisioning input.
+
+### Provisioning behavior
+
+- On a fresh environment, project `preprovision` runs **before** azd selects the
+  subscription. It discovers your public IPv4 address using `set-my-ip` without
+  querying Azure resources or choosing an implicit Azure CLI subscription.
+- Later provisions read and preserve existing AI firewall rules in the selected
+  subscription, adding your current IP to the allowlist.
+- Postprovision generates local Angular configuration and Agent/API `.env`
+  files. No cloud application resources are deployed in minimal mode.
+- `MINIMAL` defaults to `false`, so existing full deployments keep their
+  architecture and `azd up` workflow. Minimal mode supports **`azd provision`**
+  only; hooks reject `azd up`, `azd package`, `azd deploy`, and `azd publish`
+  with local-run guidance.
+
+### Restricted local access
+
+Azure AI uses a public service endpoint restricted to your discovered public
+IPv4 address and any preserved IP rules. It does not enable an "all Azure
+services" exception or an internet-wide IP range. Foundry keeps default action
+**Deny** and bypass **None**.
+
+After provisioning, assign your user to the provisioned enterprise applications
+and grant the required consent as described under
+[User authentication](#user-authentication-openid-connect).
+
+Re-run `azd provision` if your public IP changes. Review and remove obsolete
+Foundry IPs in the portal when no longer needed. The preprovision hook aborts on
+firewall read errors rather than resetting the allowlist. Do not edit rules
+concurrently with provisioning or broaden them to the entire internet to resolve
+a timeout.
+
+### Run the Agent, API and App
+
+The local Agent authenticates to Azure AI using `DefaultAzureCredential` and
+your Azure CLI login, not a cloud managed identity. From the repository root,
+start the Agent:
 
 ```bash
 pnpm agent
+```
+
+In another terminal, start the API with local environment loading enabled:
+
+```bash
 pnpm api:minimal
+```
+
+In a third terminal, start the App:
+
+```bash
 pnpm app
 ```
 
-Open `https://localhost:4200`. The local LangGraph development server uses port
-2024 and local development storage, not Azure PostgreSQL or Redis; it is not a
-production persistence service. See the [LangGraph local development
-documentation](https://docs.langchain.com/langsmith/local-dev-testing) for its
+Open **https://localhost:4200**, sign in, and ask for a haiku. The generated
+frontend configuration points to `http://localhost:4000/api`, and the API
+connects to the local Agent at `http://localhost:2024`. Entra sign-in and API
+token/scope validation remain enabled.
+
+LangGraph's development server uses local storage, not Azure PostgreSQL or
+Redis. Treat it as development state, not production-backed durable history.
+See the [LangGraph local development
+documentation](https://docs.langchain.com/langsmith/local-dev-testing) for
 storage and restart behavior.
 
-Minimal mode supports `azd provision` only: `azd up`, package, deploy and publish
-are rejected. The default remains the full deployment. Do not switch an existing
-environment between modes: conditional ARM resources do not delete the old
-deployment, and omitted resources continue to incur charges. Use a separate
-environment, preserve any data you need, and approve old-resource cleanup
-separately. Entra registrations also require separate cleanup.
+### Local credentials and regeneration
+
+Postprovision writes the Agent and API settings to ignored
+`packages/agent/.env` and `packages/api/.env`, and creates the ignored Angular
+environment files. Protect `.azure/` and the package `.env` files as credentials:
+do not commit or publish their contents. The LangSmith key belongs in the
+Agent configuration, never the frontend.
+
+To regenerate local configuration from an already provisioned environment:
+
+```bash
+azd hooks run postprovision -e langchain-minimal
+```
+
+This overwrites the generated Angular environment files and known Agent/API
+configuration values, clears stale cloud identity, telemetry and database
+settings managed by the minimal helper, and preserves unrelated `.env`
+settings.
+
+### Costs
+
+Minimal mode is **not free**: Azure AI charges depend on model usage. It creates
+no PostgreSQL or Redis server to stop or start. Any existing full deployment
+continues billing independently until you remove it.
+
+### Existing deployments and rollback
+
+Do not treat `MINIMAL=true` as a cleanup operation on an existing full
+environment. Incremental ARM deployments do not delete resources omitted by a
+conditional module. Use separate environments for the two modes; in-place mode
+switching is blocked.
+
+A new azd environment does not guarantee a new Azure resource group. Check the
+intended subscription and resource group before provisioning, and restore lost
+deployment state rather than reusing an existing deployment.
+
+Verify the new environment first, preserve any history you need, and separately
+approve removal of the old environment. Keep the old environment for rollback
+until the new setup is accepted. `azd down` is destructive and still does not
+remove the Entra app registrations; see [Clean up](#clean-up).
 
 ## Working with the code
 
@@ -322,9 +442,9 @@ code flow with PKCE. Two app registrations are provisioned by Bicep:
   the app in Entra can obtain tokens for it.
 - **App registration** ([infra/app-registration.bicep](infra/app-registration.bicep)) —
   a _public client_ for the Angular SPA (no client secret). It is granted the
-  API's `app.use` scope and has redirect URIs for both local dev
-  (`https://localhost:4200/redirect`) and the deployed gateway
-  (`https://<agw-public-ip>/redirect`).
+  API's `app.use` scope and has the local dev redirect URI
+  (`https://localhost:4200/redirect`). Full mode also adds the deployed gateway
+  redirect URI (`https://<agw-public-ip>/redirect`).
 
 ```mermaid
 sequenceDiagram
