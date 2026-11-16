@@ -361,21 +361,11 @@ Minimal mode is **not free**: Azure AI charges depend on model usage. It creates
 no PostgreSQL or Redis server to stop or start. Any existing full deployment
 continues billing independently until you remove it.
 
-### Existing deployments and rollback
+### Existing deployments
 
-Do not treat `MINIMAL=true` as a cleanup operation on an existing full
-environment. Incremental ARM deployments do not delete resources omitted by a
-conditional module. Use separate environments for the two modes; in-place mode
-switching is blocked.
-
-A new azd environment does not guarantee a new Azure resource group. Check the
-intended subscription and resource group before provisioning, and restore lost
-deployment state rather than reusing an existing deployment.
-
-Verify the new environment first, preserve any history you need, and separately
-approve removal of the old environment. Keep the old environment for rollback
-until the new setup is accepted. `azd down` is destructive and still does not
-remove the Entra app registrations; see [Clean up](#clean-up).
+Use a new azd environment for minimal mode. Switching an existing environment
+is unsupported and does not remove previously deployed resources or stop their
+charges. See [Clean up](#clean-up) to remove an old deployment.
 
 ## Working with the code
 
