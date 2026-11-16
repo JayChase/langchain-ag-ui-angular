@@ -213,12 +213,10 @@ provisioning instead of `azd up`:
 ```bash
 azd env new langchain-minimal
 azd env set MINIMAL true
-azd env set AZURE_SUBSCRIPTION_ID <subscription-id>
 azd provision
 ```
 
-Set the intended subscription explicitly so the hook can check existing
-resources before provisioning; select regions when prompted. The deployment creates
+Select the intended subscription and regions when prompted. The deployment creates
 Azure AI and its model, the Entra API/SPA registrations, and developer AI
 access. It does not create Application Gateway, hosted containers, Redis,
 PostgreSQL, private networking, Key Vault or monitoring. Azure AI usage and any
@@ -229,9 +227,10 @@ Azure AI firewall, which otherwise denies access. Re-run `azd provision` if your
 IP changes; existing AI IP rules are preserved. Remove obsolete rules manually
 and do not open access to the whole internet. If an existing environment has
 lost its subscription setting, restore its original `AZURE_SUBSCRIPTION_ID`
-before reprovisioning. A new minimal environment must use an empty resource
-group; if deployment state is lost, restore it rather than pointing a new
-environment at an existing resource group. Assign your user to both enterprise applications and
+before reprovisioning. A new azd environment does not guarantee a new Azure
+resource group: check the intended subscription and resource group before
+provisioning, and restore lost deployment state rather than reusing an existing
+deployment. Assign your user to both enterprise applications and
 grant the required consent as described in the authentication section below.
 
 Provisioning generates ignored local configuration for all three packages. Set

@@ -11,15 +11,15 @@ test('real azd hooks reject minimal cloud operations and preserve full mode', (t
   t.after(() => rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
   mkdirSync(join(root, 'infra'));
   mkdirSync(join(root, 'bin'));
-  writeFileSync(join(root, 'bin', 'az.cmd'), '@echo off\r\necho false\r\n');
-  writeFileSync(join(root, 'bin', 'az'), '#!/bin/sh\nprintf "false\\n"\n', { mode: 0o755 });
+  writeFileSync(join(root, 'bin', 'az.cmd'), '@echo off\r\nexit /b 42\r\n');
+  writeFileSync(join(root, 'bin', 'az'), '#!/bin/sh\nexit 42\n', { mode: 0o755 });
   mkdirSync(join(root, '.azure', 'fixture'), { recursive: true });
   copyFileSync(new URL('./minimal-provision.mjs', import.meta.url), join(root, 'infra', 'minimal-provision.mjs'));
   writeFileSync(join(root, 'infra', 'set-my-ip.ps1'), 'param([string]$EnvironmentName)\nazd env set AZURE_MY_IP_ADDRESS 198.51.100.1 --environment $EnvironmentName\nexit $LASTEXITCODE\n');
   writeFileSync(join(root, 'infra', 'set-my-ip.sh'), '#!/bin/bash\nset -e\nazd env set AZURE_MY_IP_ADDRESS 198.51.100.1 --environment "$1"\n');
   writeFileSync(join(root, '.azure', 'config.json'), JSON.stringify({ defaultEnvironment: 'fixture' }));
   const envFile = join(root, '.azure', 'fixture', '.env');
-  writeFileSync(envFile, 'AZURE_ENV_NAME="fixture"\nAZURE_SUBSCRIPTION_ID="fixture-sub"\nMINIMAL="true"\n');
+  writeFileSync(envFile, 'AZURE_ENV_NAME="fixture"\nMINIMAL="true"\n');
   writeFileSync(join(root, 'azure.yaml'), `name: fixture
 hooks:
   preup:
@@ -59,11 +59,17 @@ hooks:
   assert.match(`${minimal.stdout}${minimal.stderr}`, /Minimal mode cannot run azd up/);
   const provision = execute('preprovision');
   assert.equal(provision.status, 0, `${provision.stdout}${provision.stderr}`);
+  assert.match(`${provision.stdout}${provision.stderr}`, /Subscription selection is pending/);
   const saved = parseEnv(readFileSync(envFile, 'utf8'));
   assert.equal(saved.AZURE_MY_IP_ADDRESS, '198.51.100.1');
   const retrieved = spawnSync('azd', ['env', 'get-values', '--output', 'json', '--environment', 'fixture', '--cwd', root, '--no-prompt'], { env, encoding: 'utf8', timeout: 60000 });
   assert.equal(retrieved.status, 0, retrieved.stderr);
   assert.deepEqual(JSON.parse(JSON.parse(retrieved.stdout).MINIMAL_AI_IP_RULES), ['198.51.100.1']);
+  assert.equal(JSON.parse(retrieved.stdout).AZURE_SUBSCRIPTION_ID, undefined);
+  writeFileSync(envFile, 'AZURE_ENV_NAME="fixture"\nMINIMAL="true"\nDEPLOYMENT_MODE="minimal"\n');
+  const missingSubscription = execute('preprovision');
+  assert.notEqual(missingSubscription.status, 0);
+  assert.match(`${missingSubscription.stdout}${missingSubscription.stderr}`, /original AZURE_SUBSCRIPTION_ID/);
   const app = join(root, 'packages', 'app', 'projects', 'demo', 'src', 'environments');
   mkdirSync(app, { recursive: true });
   mkdirSync(join(root, 'packages', 'api'), { recursive: true });

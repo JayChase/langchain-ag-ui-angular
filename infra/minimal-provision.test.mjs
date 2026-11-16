@@ -24,11 +24,12 @@ test('firewall rules preserve existing entries and fail closed on missing state'
     return JSON.stringify({ properties: { networkAcls: { ipRules: [{ value: '198.51.100.2' }] } } });
   };
   assert.deepEqual(collectAiRules(env, invoke), ['198.51.100.2', '198.51.100.1']);
-  assert.throws(() => collectAiRules({ AZURE_MY_IP_ADDRESS: '198.51.100.1' }), /Set AZURE_SUBSCRIPTION_ID/);
-  assert.throws(() => collectAiRules({ ...env, AZURE_SUBSCRIPTION_ID: '', DEPLOYMENT_MODE: 'minimal' }), /original subscription/);
+  assert.deepEqual(collectAiRules({ AZURE_MY_IP_ADDRESS: '198.51.100.1' }, () => { throw new Error('Unexpected Azure call'); }), ['198.51.100.1']);
+  for (const key of ['DEPLOYMENT_MODE', 'RESOURCE_GROUP', 'AZURE_RESOURCE_GROUP', 'AZURE_AI_ENDPOINT']) {
+    assert.throws(() => collectAiRules({ AZURE_MY_IP_ADDRESS: '198.51.100.1', [key]: 'existing' }), /original AZURE_SUBSCRIPTION_ID/);
+  }
   assert.deepEqual(collectAiRules(env, () => 'false'), ['198.51.100.1']);
   assert.throws(() => collectAiRules(env, (_cmd, args) => args.includes('exists') ? 'true' : args.includes('list') ? JSON.stringify([{ name: 'x', tags: { 'azd-env-name': 'demo' } }]) : '{}'), /firewall rules/);
-  assert.throws(() => collectAiRules({ ...env, DEPLOYMENT_MODE: '' }, (_cmd, args) => args.includes('exists') ? 'true' : '[{"name":"existing"}]'), /resource group is not empty/);
 });
 
 test('local settings use the local runtime and remove stale cloud values', (t) => {

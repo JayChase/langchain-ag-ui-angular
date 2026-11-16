@@ -50,23 +50,26 @@ export function checkMode(values) {
   return current;
 }
 
+function checkSubscription(values) {
+  if (!values.AZURE_SUBSCRIPTION_ID
+    && ['DEPLOYMENT_MODE', 'RESOURCE_GROUP', 'AZURE_RESOURCE_GROUP', 'AZURE_AI_ENDPOINT'].some((key) => values[key])) {
+    throw new Error('Restore the original AZURE_SUBSCRIPTION_ID before reprovisioning so existing firewall rules can be preserved.');
+  }
+}
+
 export function collectAiRules(values, invoke = run) {
   const ip = values.AZURE_MY_IP_ADDRESS;
   if (!ip) throw new Error('Public IP discovery did not persist AZURE_MY_IP_ADDRESS.');
   const subscription = values.AZURE_SUBSCRIPTION_ID;
   if (!subscription) {
-    throw new Error('Set AZURE_SUBSCRIPTION_ID to the intended subscription before provisioning; restore the original subscription for an existing environment.');
+    checkSubscription(values);
+    return [ip];
   }
   const group = values.RESOURCE_GROUP || values.AZURE_RESOURCE_GROUP || `rg-${values.AZURE_ENV_NAME}`;
   const common = ['--subscription', subscription, '--only-show-errors', '--output', 'json'];
   const exists = JSON.parse(invoke('az', ['group', 'exists', '--name', group, ...common]));
   if (typeof exists !== 'boolean') throw new Error('Invalid Azure resource group state.');
   if (!exists) return [ip];
-  if (!values.DEPLOYMENT_MODE) {
-    const resources = JSON.parse(invoke('az', ['resource', 'list', '--resource-group', group, ...common]));
-    if (!Array.isArray(resources)) throw new Error('Invalid Azure resource list; provisioning stopped.');
-    if (resources.length) throw new Error('The target resource group is not empty and has no saved deployment mode. Use a new azd environment and resource group.');
-  }
   const accounts = JSON.parse(invoke('az', ['cognitiveservices', 'account', 'list', '--resource-group', group, ...common]));
   const matches = accounts.filter((account) => account.tags?.['azd-env-name'] === values.AZURE_ENV_NAME);
   if (matches.length > 1) throw new Error('Multiple Azure AI accounts match this environment.');
@@ -139,14 +142,13 @@ export function hook(command) {
     return;
   }
   if (command === 'preprovision') {
-    if (current === 'minimal' && !env.AZURE_SUBSCRIPTION_ID) {
-      throw new Error('Set AZURE_SUBSCRIPTION_ID to the intended subscription before provisioning; restore the original subscription for an existing environment.');
-    }
+    if (current === 'minimal') checkSubscription(env);
     legacy('set-my-ip', [required(env, 'AZURE_ENV_NAME')]);
     if (current === 'minimal') {
       env = values();
       const rules = collectAiRules(env);
       run('azd', ['env', 'set', 'MINIMAL_AI_IP_RULES', JSON.stringify(rules), '--environment', env.AZURE_ENV_NAME, '--no-prompt']);
+      if (!env.AZURE_SUBSCRIPTION_ID) console.log('Subscription selection is pending. azd will select the target after this hook.');
     }
     return;
   }
