@@ -16,6 +16,7 @@ describe('Bearer Auth Middleware', () => {
     port: 4000,
     localDev: false,
     agentUri: 'http://localhost:8000',
+    apiBasePath: '/',
     corsWhitelist: ['https://example.com'],
     graphId: 'test-graph',
     jwtIssuer: 'https://login.microsoftonline.com/test-tenant/v2.0',

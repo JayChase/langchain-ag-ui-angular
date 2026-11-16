@@ -205,6 +205,59 @@ az login
 azd up
 ```
 
+### Cost-conscious local development
+
+For local development, create a **new** environment and opt into minimal
+provisioning instead of `azd up`:
+
+```bash
+azd env new langchain-minimal
+azd env set MINIMAL true
+azd env set AZURE_SUBSCRIPTION_ID <subscription-id>
+azd provision
+```
+
+Set the intended subscription explicitly so the hook can check existing
+resources before provisioning; select regions when prompted. The deployment creates
+Azure AI and its model, the Entra API/SPA registrations, and developer AI
+access. It does not create Application Gateway, hosted containers, Redis,
+PostgreSQL, private networking, Key Vault or monitoring. Azure AI usage and any
+other retained services still incur charges; this is not a production setup.
+
+The provision hook discovers your public IPv4 address and allows it through the
+Azure AI firewall, which otherwise denies access. Re-run `azd provision` if your
+IP changes; existing AI IP rules are preserved. Remove obsolete rules manually
+and do not open access to the whole internet. If an existing environment has
+lost its subscription setting, restore its original `AZURE_SUBSCRIPTION_ID`
+before reprovisioning. A new minimal environment must use an empty resource
+group; if deployment state is lost, restore it rather than pointing a new
+environment at an existing resource group. Assign your user to both enterprise applications and
+grant the required consent as described in the authentication section below.
+
+Provisioning generates ignored local configuration for all three packages. Set
+`LANGSMITH_API_KEY` in `packages/agent/.env` if it was not supplied during
+provisioning, and protect this file as a credential. Sign in with `az login`,
+then run these commands in separate terminals:
+
+```bash
+pnpm agent
+pnpm api:minimal
+pnpm app
+```
+
+Open `https://localhost:4200`. The local LangGraph development server uses port
+2024 and local development storage, not Azure PostgreSQL or Redis; it is not a
+production persistence service. See the [LangGraph local development
+documentation](https://docs.langchain.com/langsmith/local-dev-testing) for its
+storage and restart behavior.
+
+Minimal mode supports `azd provision` only: `azd up`, package, deploy and publish
+are rejected. The default remains the full deployment. Do not switch an existing
+environment between modes: conditional ARM resources do not delete the old
+deployment, and omitted resources continue to incur charges. Use a separate
+environment, preserve any data you need, and approve old-resource cleanup
+separately. Entra registrations also require separate cleanup.
+
 ## Working with the code
 
 ### Project structure

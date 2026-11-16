@@ -33,6 +33,9 @@ param publicNetworkAccess string = 'Disabled'
 @description('Optional. Caller public IP address allowed through the firewall for local development access.')
 param myIpAddress string = ''
 
+@description('Optional network ACL override.')
+param networkAcls object?
+
 import { roleAssignmentType } from 'br/public:avm/utl/types/avm-common-types:0.6.0'
 @description('Optional. Array of role assignments to create.')
 param roleAssignments roleAssignmentType[]?
@@ -44,16 +47,16 @@ param tags object = {}
 
 var privateDnsZoneName = 'privatelink.cognitiveservices.azure.com'
 
-resource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' existing = {
+resource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' existing = if (!empty(virtualNetworkName)) {
   name: virtualNetworkName
 }
 
-resource privateEndpointSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-04-01' existing = {
+resource privateEndpointSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-04-01' existing = if (!empty(virtualNetworkName)) {
   parent: vnet
   name: privateEndpointSubnetName
 }
 
-module privateDnsZone 'br/public:avm/res/network/private-dns-zone:0.7.1' = {
+module privateDnsZone 'br/public:avm/res/network/private-dns-zone:0.7.1' = if (!empty(virtualNetworkName)) {
   name: '${name}-private-dns-zone-deployment'
   params: {
     name: privateDnsZoneName
@@ -82,7 +85,7 @@ module account 'br/public:avm/res/cognitive-services/account:0.19.0' = {
     restore: restore
     sku: sku
     deployments: deployments
-    privateEndpoints: [
+    privateEndpoints: !empty(virtualNetworkName) ? [
       {
         name: 'pe-${name}'
         subnetResourceId: privateEndpointSubnet.id
@@ -95,9 +98,9 @@ module account 'br/public:avm/res/cognitive-services/account:0.19.0' = {
           ]
         }
       }
-    ]
+    ] : []
     publicNetworkAccess: !empty(myIpAddress) ? 'Enabled' : publicNetworkAccess
-    networkAcls: !empty(myIpAddress)
+    networkAcls: networkAcls ?? (!empty(myIpAddress)
       ? {
           defaultAction: 'Deny'
           bypass: 'AzureServices'
@@ -107,7 +110,7 @@ module account 'br/public:avm/res/cognitive-services/account:0.19.0' = {
             }
           ]
         }
-      : null
+      : null)
     roleAssignments: roleAssignments
   }
 }

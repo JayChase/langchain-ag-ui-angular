@@ -51,7 +51,7 @@ export const createApp = (settings: Settings): Hono => {
           default: demoAgent,
         }),
       }),
-      basePath: '/',
+      basePath: settings.apiBasePath,
     });
 
     return handler(c.req.raw);

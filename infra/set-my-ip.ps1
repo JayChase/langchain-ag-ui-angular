@@ -1,3 +1,5 @@
+param([string]$EnvironmentName = '')
+
 $ErrorActionPreference = "Stop"
 
 try {
@@ -19,4 +21,9 @@ if (-not $isValid) {
     exit 1
 }
 
-azd env set AZURE_MY_IP_ADDRESS $ip
+if ($EnvironmentName) {
+    azd env set AZURE_MY_IP_ADDRESS $ip --environment $EnvironmentName
+} else {
+    azd env set AZURE_MY_IP_ADDRESS $ip
+}
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
