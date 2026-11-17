@@ -19,9 +19,9 @@ Key Vault, and Application Insights.
 - [Prerequisites](#prerequisites)
 - [Dev Container Quick Start](#dev-container-quick-start)
 - [Local development](#local-development)
-- [Cost-Conscious Local Development Setup](#-cost-conscious-local-development-setup)
 - [Working with the code](#working-with-the-code)
 - [Clean up](#clean-up)
+- [Cost-Conscious Local Development Setup](#-cost-conscious-local-development-setup)
 - [User authentication (OpenID Connect)](#user-authentication-openid-connect)
 - [LangGraph config profiles](#langgraph-config-profiles)
 - [Troubleshooting](#troubleshooting)
@@ -206,6 +206,54 @@ az login
 azd up
 ```
 
+## Working with the code
+
+### Project structure
+
+```text
+azure.yaml            # azd service + hook definitions
+infra/                 # Bicep infrastructure (Container Apps, ACR, AI Foundry, Key Vault, monitoring)
+packages/
+  agent/               # LangGraph agent server  (LangGraph.js)
+  api/                 # ag-ui api (Hono)
+  app/                 # ag-ui app (Angular with @copilotkit/angular)
+```
+
+> [!IMPORTANT]
+> Warning: the demo certificate under `infra/cert/agw-demo-cert.crt` is for non-production/testing use only and must not be used in production.
+
+### Running and debugging
+
+In VS Code, open **Run and Debug** and launch **🤖 agent**, **🗼 api** and
+**🖥️ ng serve**. The API's existing `dev` script loads its local `.env` file.
+
+![launch agent and api](./docs/images/launch-options.png)
+
+> [!NOTE]
+> azd up will add the local ip address as an allowed address to the Azure Foundry instance but if you do not have a static ip address you may need to add your current address as well.
+
+### Using the app
+
+- Open the app **https://localhost:4200** and log in with your Entra account.
+- To run the example frontend tool (**haiku tool**), ask the agent to write a haiku.
+
+![haiku tool](./docs/images/haiku-frontend-toolpng.png)
+
+## Clean up
+
+Remove all the deployed resources and select **Yes** when prompted to permanently delete soft-deleted resources.
+
+```bash
+azd down
+```
+
+> [!NOTE]
+> Run `azd down` without the `--purge` flag and confirm the purge interactively when prompted. Passing `--purge` directly on the command line causes `azd` to force-delete the Log Analytics workspace before the resource group is removed, which fails with `CannotDeleteWorkspaceWhenLinkedToPrivateLinkScopes` while the Azure Monitor Private Link Scope is still attached.
+> [!WARNING]
+> azd provision will deploy resources on paid SKUs. So please do not leave these running if you are not using them. They will cost you money.
+> [!WARNING]
+> azd down will not remove the Entra app registrations. Please delete those manually.
+
 ## 💰 Cost-Conscious Local Development Setup
 
 Minimal mode is a lower-cost option for local development. It provisions the
@@ -227,29 +275,13 @@ the dashboard and Azure Monitor Private Link Scope (AMPLS).
 
 ### Set up and provision
 
-Install the dependencies from the repository root if you have not already:
-
-```bash
-pnpm i
-```
-
-Create a **new** azd environment and opt into minimal mode:
+Install dependencies and sign in as described in [Local development](#local-development).
+Instead of `azd up`, create a **new** azd environment and provision the minimal
+resources:
 
 ```bash
 azd env new langchain-minimal
 azd env set MINIMAL true
-```
-
-Configure azd to use Azure CLI authentication, then sign in:
-
-```bash
-azd config set auth.useAzCliAuth true
-az login
-```
-
-Provision the resources:
-
-```bash
 azd provision
 ```
 
@@ -295,46 +327,17 @@ services" exception or an internet-wide IP range. Foundry keeps default action
 
 After provisioning, assign your user to the provisioned enterprise applications
 and grant the required consent as described under
-[User authentication](#user-authentication-openid-connect).
+[User authentication](#user-authentication-openid-connect), then follow
+[Running and debugging](#running-and-debugging).
+
+The local Agent uses `DefaultAzureCredential` with your Azure CLI login.
+Entra sign-in and API token/scope validation remain enabled.
 
 Re-run `azd provision` if your public IP changes. Review and remove obsolete
 Foundry IPs in the portal when no longer needed. The preprovision hook aborts on
 firewall read errors rather than resetting the allowlist. Do not edit rules
 concurrently with provisioning or broaden them to the entire internet to resolve
 a timeout.
-
-### Run the Agent, API and App
-
-The local Agent authenticates to Azure AI using `DefaultAzureCredential` and
-your Azure CLI login, not a cloud managed identity. From the repository root,
-start the Agent:
-
-```bash
-pnpm agent
-```
-
-In another terminal, start the API with local environment loading enabled:
-
-```bash
-pnpm api:minimal
-```
-
-In a third terminal, start the App:
-
-```bash
-pnpm app
-```
-
-Open **https://localhost:4200**, sign in, and ask for a haiku. The generated
-frontend configuration points to `http://localhost:4000/api`, and the API
-connects to the local Agent at `http://localhost:2024`. Entra sign-in and API
-token/scope validation remain enabled.
-
-LangGraph's development server uses local storage, not Azure PostgreSQL or
-Redis. Treat it as development state, not production-backed durable history.
-See the [LangGraph local development
-documentation](https://docs.langchain.com/langsmith/local-dev-testing) for
-storage and restart behavior.
 
 ### Local credentials and regeneration
 
@@ -366,59 +369,6 @@ continues billing independently until you remove it.
 Use a new azd environment for minimal mode. Switching an existing environment
 is unsupported and does not remove previously deployed resources or stop their
 charges. See [Clean up](#clean-up) to remove an old deployment.
-
-## Working with the code
-
-### Project structure
-
-```text
-azure.yaml            # azd service + hook definitions
-infra/                 # Bicep infrastructure (Container Apps, ACR, AI Foundry, Key Vault, monitoring)
-packages/
-  agent/               # LangGraph agent server  (LangGraph.js)
-  api/                 # ag-ui api (Hono)
-  app/                 # ag-ui app (Angular with @copilotkit/angular)
-```
-
-> [!IMPORTANT]
-> Warning: the demo certificate under `infra/cert/agw-demo-cert.crt` is for non-production/testing use only and must not be used in production.
-
-### Running and debugging
-
-- Start the agent and api using the debug launch settings
-
-![launch agent and api](./docs/images/launch-options.png)
-
-- Run the Angular app
-
-```bash
-pnpm app
-```
-
-> [!NOTE]
-> azd up will add the local ip address as an allowed address to the Azure Foundry instance but if you do not have a static ip address you may need to add your current address as well.
-
-### Using the app
-
-- Open the app **https://localhost:4200** and log in with your Entra account.
-- To run the example frontend tool (**haiku tool**), ask the agent to write a haiku.
-
-![haiku tool](./docs/images/haiku-frontend-toolpng.png)
-
-## Clean up
-
-Remove all the deployed resources and select **Yes** when prompted to permanently delete soft-deleted resources.
-
-```bash
-azd down
-```
-
-> [!NOTE]
-> Run `azd down` without the `--purge` flag and confirm the purge interactively when prompted. Passing `--purge` directly on the command line causes `azd` to force-delete the Log Analytics workspace before the resource group is removed, which fails with `CannotDeleteWorkspaceWhenLinkedToPrivateLinkScopes` while the Azure Monitor Private Link Scope is still attached.
-> [!WARNING]
-> azd provision will deploy resources on paid SKUs. So please do not leave these running if you are not using them. They will cost you money.
-> [!WARNING]
-> azd down will not remove the Entra app registrations. Please delete those manually.
 
 ## User authentication (OpenID Connect)
 

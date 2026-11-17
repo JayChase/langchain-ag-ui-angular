@@ -7,8 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "app": "pnpm -F app -r dev",
     "agent": "pnpm -F agent -r dev",
-    "api": "pnpm -F api -r dev",
-    "api:minimal": "pnpm -F api -r dev:minimal"
+    "api": "pnpm -F api -r dev"
   },
   "keywords": [
     "azd",
