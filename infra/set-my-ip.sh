@@ -16,4 +16,8 @@ for octet in ${ip//./ }; do
   fi
 done
 
-azd env set AZURE_MY_IP_ADDRESS "$ip"
+if [ -n "${1:-}" ]; then
+  azd env set AZURE_MY_IP_ADDRESS "$ip" --environment "$1"
+else
+  azd env set AZURE_MY_IP_ADDRESS "$ip"
+fi

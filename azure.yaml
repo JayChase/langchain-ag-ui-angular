@@ -11,33 +11,61 @@ workflows:
     - azd: deploy --all
 
 hooks:
+  preup:
+    posix:
+      shell: sh
+      run: node ./infra/minimal-provision.mjs preup
+    windows:
+      shell: pwsh
+      run: node ./infra/minimal-provision.mjs preup
+  prepackage:
+    posix:
+      shell: sh
+      run: node ./infra/minimal-provision.mjs prepackage
+    windows:
+      shell: pwsh
+      run: node ./infra/minimal-provision.mjs prepackage
+  predeploy:
+    posix:
+      shell: sh
+      run: node ./infra/minimal-provision.mjs predeploy
+    windows:
+      shell: pwsh
+      run: node ./infra/minimal-provision.mjs predeploy
+  prepublish:
+    posix:
+      shell: sh
+      run: node ./infra/minimal-provision.mjs prepublish
+    windows:
+      shell: pwsh
+      run: node ./infra/minimal-provision.mjs prepublish
   preprovision:
     posix:
       shell: sh
-      run: ./infra/set-my-ip.sh
+      run: node ./infra/minimal-provision.mjs preprovision
 
     windows:
       shell: pwsh
-      run: ./infra/set-my-ip.ps1
+      run: node ./infra/minimal-provision.mjs preprovision
   postprovision:
     posix:
       shell: sh
-      run: ./infra/replace-placeholders.sh packages/app/projects/demo/src/environments/environment.template.ts packages/app/projects/demo/src/environments/environment.ts && ./infra/update-env.sh && ./infra/update-angular-json.sh
+      run: node ./infra/minimal-provision.mjs postprovision
 
     windows:
       shell: pwsh
-      run: ./infra/replace-placeholders.ps1 packages/app/projects/demo/src/environments/environment.template.ts packages/app/projects/demo/src/environments/environment.ts; ./infra/update-env.ps1; ./infra/update-angular-json.ps1
+      run: node ./infra/minimal-provision.mjs postprovision
  
   postdeploy:
     posix:
       shell: sh
       interactive: true
-      run: ./infra/post-deploy-info.sh
+      run: node ./infra/minimal-provision.mjs postdeploy
 
     windows:
       shell: pwsh
       interactive: true
-      run: ./infra/post-deploy-info.ps1
+      run: node ./infra/minimal-provision.mjs postdeploy
 
 services:
   app:

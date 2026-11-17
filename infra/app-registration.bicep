@@ -26,6 +26,9 @@ param audiences object = {
 @description('Specifies the ID of the user-assigned managed identity.')
 param webAppIdentityId string
 
+@description('Create the managed identity federated credential for hosted deployments.')
+param createFederatedIdentityCredential bool = true
+
 @description('Specifies the unique name for the client application.')
 param clientAppName string
 
@@ -109,7 +112,7 @@ resource clientApp 'Microsoft.Graph/applications@v1.0' = {
     }
   ]
 
-  resource clientAppFic 'federatedIdentityCredentials@v1.0' = {
+  resource clientAppFic 'federatedIdentityCredentials@v1.0' = if (createFederatedIdentityCredential) {
     name: '${clientApp.uniqueName}/miAsFic'
     audiences: [
       audiences[cloudEnvironment].uri

@@ -1,9 +1,18 @@
 targetScope = 'subscription'
 
+@description('Provision only the Azure dependencies needed for local development.')
+param minimal bool = false
+
+@description('Existing Azure AI firewall rules preserved by the preprovision hook.')
+param minimalAiIpRules array = []
+
 @minLength(1)
 @maxLength(64)
 @description('Name of the the environment which is used to generate a short unique hash used in all resources.')
 param environmentName string
+
+@description('Optional resource group name. Defaults to the environment resource group.')
+param resourceGroupName string = ''
 
 @minLength(1)
 @description('Primary location for all resources')
@@ -162,15 +171,21 @@ param appExists bool
 var abbrs = loadJsonContent('abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName }
+var formattedAiIpRules = [for rule in minimalAiIpRules: { value: rule }]
+var minimalAiAcls = {
+  defaultAction: 'Deny'
+  bypass: 'None'
+  ipRules: formattedAiIpRules
+}
 
 // Organize resources in a resource group
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: '${abbrs.resourcesResourceGroups}${environmentName}'
+  name: empty(resourceGroupName) ? '${abbrs.resourcesResourceGroups}${environmentName}' : resourceGroupName
   location: location
   tags: tags
 }
 
-module agentIdentity './user-assigned-identity.bicep' = {
+module agentIdentity './user-assigned-identity.bicep' = if (!minimal) {
   name: 'agentIdentityDeployment'
   scope: resourceGroup
   params: {
@@ -180,7 +195,7 @@ module agentIdentity './user-assigned-identity.bicep' = {
   }
 }
 
-module defaultContainerAppIdentity './user-assigned-identity.bicep' = {
+module defaultContainerAppIdentity './user-assigned-identity.bicep' = if (!minimal) {
   name: 'defaultAgentIdentityDeployment'
   scope: resourceGroup
   params: {
@@ -191,7 +206,7 @@ module defaultContainerAppIdentity './user-assigned-identity.bicep' = {
 }
 
 // Identity used only by the deploymentScript that generates/imports the App Gateway demo TLS cert.
-module deploymentIdentity './user-assigned-identity.bicep' = {
+module deploymentIdentity './user-assigned-identity.bicep' = if (!minimal) {
   name: 'deploymentIdentityDeployment'
   scope: resourceGroup
   params: {
@@ -203,7 +218,7 @@ module deploymentIdentity './user-assigned-identity.bicep' = {
 
 // vnet
 
-module vnet './vnet.bicep' = {
+module vnet './vnet.bicep' = if (!minimal) {
   name: 'vnet'
   scope: resourceGroup
   params: {
@@ -214,7 +229,7 @@ module vnet './vnet.bicep' = {
 }
 
 // Monitor application with Azure Monitor
-module monitoring './monitoring.bicep' = {
+module monitoring './monitoring.bicep' = if (!minimal) {
   name: 'monitoringDeployment'
   scope: resourceGroup
   params: {
@@ -229,7 +244,7 @@ module monitoring './monitoring.bicep' = {
   }
 }
 
-module storageAccount 'br/public:avm/res/storage/storage-account:0.33.0' = {
+module storageAccount 'br/public:avm/res/storage/storage-account:0.33.0' = if (!minimal) {
   name: 'storageAccountDeployment'
   scope: resourceGroup
   params: {
@@ -271,7 +286,7 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.33.0' = {
   }
 }
 
-module redis './redis.bicep' = {
+module redis './redis.bicep' = if (!minimal) {
   name: 'redisDeployment'
   scope: resourceGroup
   dependsOn: [monitoring]
@@ -296,7 +311,7 @@ module redis './redis.bicep' = {
   }
 }
 
-module postgreSql './postgre-sql.bicep' = {
+module postgreSql './postgre-sql.bicep' = if (!minimal) {
   name: 'postgresqlDeployment'
   scope: resourceGroup
   params: {
@@ -328,33 +343,36 @@ module cognitiveServices './cognitive-services.bicep' = {
   name: 'cognitiveServicesDeployment'
   scope: resourceGroup
   // Serialize private endpoint subnet writes to avoid ARM subnet-lock races.
-  dependsOn: [redis]
+  dependsOn: !minimal ? [redis] : []
   params: {
     location: cognitiveServicesLocation
     tags: tags
     name: '${abbrs.cognitiveServicesAccounts}${resourceToken}'
     sku: cognitiveServicesSku
     deployments: chatModels
-    virtualNetworkName: vnet.outputs.name
-    privateEndpointSubnetName: vnet.outputs.peSubnetName
+    virtualNetworkName: minimal ? '' : vnet!.outputs.name
+    privateEndpointSubnetName: minimal ? '' : vnet!.outputs.peSubnetName
+    publicNetworkAccess: minimal ? 'Enabled' : 'Disabled'
+    networkAcls: minimal ? minimalAiAcls : null
     restore: restore
-    myIpAddress: myIpAddress
-    roleAssignments: [
+    myIpAddress: minimal ? '' : myIpAddress
+    roleAssignments: concat(minimal ? [] : [
       {
         roleDefinitionIdOrName: 'Cognitive Services OpenAI User'
-        principalId: agentIdentity.outputs.principalId
+        principalId: agentIdentity!.outputs.principalId
         principalType: 'ServicePrincipal'
       }
+    ], [
       {
         roleDefinitionIdOrName: 'Cognitive Services OpenAI User'
         principalId: deployer().objectId
         principalType: 'User'
       }
-    ]
+    ])
   }
 }
 
-module keyVault './key-vault.bicep' = {
+module keyVault './key-vault.bicep' = if (!minimal) {
   name: 'keyVaultDeployment'
   scope: resourceGroup
   // Serialize private endpoint subnet writes to avoid ARM subnet-lock races.
@@ -421,7 +439,7 @@ module keyVault './key-vault.bicep' = {
 
 // Generates and imports the App Gateway's demo TLS cert into Key Vault as part of this same
 // deployment, ordered by dependsOn — avoids a preprovision/provision race on the cert secret.
-module agwCert './agw-cert.bicep' = {
+module agwCert './agw-cert.bicep' = if (!minimal) {
   name: 'agwCertDeployment'
   scope: resourceGroup
   params: {
@@ -435,7 +453,7 @@ module agwCert './agw-cert.bicep' = {
 }
 
 // container registry
-module containerRegistry './container-registry.bicep' = {
+module containerRegistry './container-registry.bicep' = if (!minimal) {
   name: 'containerRegistryDeployment'
   scope: resourceGroup
   params: {
@@ -446,7 +464,7 @@ module containerRegistry './container-registry.bicep' = {
 }
 
 // cae
-module containerAppsEnvironment './container-apps-environment.bicep' = {
+module containerAppsEnvironment './container-apps-environment.bicep' = if (!minimal) {
   name: 'containerAppsEnvironmentDeployment'
   scope: resourceGroup
   params: {
@@ -462,7 +480,7 @@ module containerAppsEnvironment './container-apps-environment.bicep' = {
 param placeholderImageName string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 
 // agent ca
-module agent 'br/public:avm/ptn/azd/container-app-upsert:0.4.0' = {
+module agent 'br/public:avm/ptn/azd/container-app-upsert:0.4.0' = if (!minimal) {
   name: 'agentDeployment'
   dependsOn: [keyVault]
   scope: resourceGroup
@@ -538,7 +556,7 @@ module agent 'br/public:avm/ptn/azd/container-app-upsert:0.4.0' = {
 }
 
 // app ca
-module app 'br/public:avm/ptn/azd/container-app-upsert:0.4.0' = {
+module app 'br/public:avm/ptn/azd/container-app-upsert:0.4.0' = if (!minimal) {
   name: 'appDeployment'
   scope: resourceGroup
   params: {
@@ -562,7 +580,7 @@ module app 'br/public:avm/ptn/azd/container-app-upsert:0.4.0' = {
 }
 
 // api ca
-module api 'br/public:avm/ptn/azd/container-app-upsert:0.4.0' = {
+module api 'br/public:avm/ptn/azd/container-app-upsert:0.4.0' = if (!minimal) {
   name: 'apiDeployment'
   scope: resourceGroup
   params: {
@@ -617,7 +635,7 @@ module api 'br/public:avm/ptn/azd/container-app-upsert:0.4.0' = {
 }
 
 // terminal debug ca
-module terminal 'br/public:avm/res/app/container-app:0.23.0' = if (deployTerminal) {
+module terminal 'br/public:avm/res/app/container-app:0.23.0' = if (!minimal && deployTerminal) {
   name: 'terminalDeployment'
   scope: resourceGroup
   params: {
@@ -697,7 +715,7 @@ module terminal 'br/public:avm/res/app/container-app:0.23.0' = if (deployTermina
 }
 
 // application gateway
-module applicationGateway 'application-gateway.bicep' = {
+module applicationGateway 'application-gateway.bicep' = if (!minimal) {
   name: 'applicationGatewayDeployment'
   scope: resourceGroup
   params: {
@@ -736,39 +754,41 @@ module appRegistration 'app-registration.bicep' = {
   name: 'appRegistrationDeployment'
   scope: resourceGroup
   params: {
-    clientAppName: app.outputs.name
-    clientAppDisplayName: app.outputs.name
-    webAppIdentityId: app.outputs.resourceId
+    clientAppName: minimal ? '${abbrs.appContainerApps}${resourceToken}-app' : app!.outputs.name
+    clientAppDisplayName: minimal ? '${abbrs.appContainerApps}${resourceToken}-app' : app!.outputs.name
+    webAppIdentityId: minimal ? '' : app!.outputs.resourceId
+    createFederatedIdentityCredential: !minimal
     issuer: issuer
     serviceManagementReference: serviceManagementReference
-    redirectUris: ['https://localhost:4200/redirect', 'https://${applicationGateway.outputs.publicIpAddress}/redirect']
+    redirectUris: minimal ? ['https://localhost:4200/redirect'] : ['https://localhost:4200/redirect', 'https://${applicationGateway!.outputs.publicIpAddress}/redirect']
     apiAppId: apiRegistration.outputs.apiAppId
     apiScopeIds: apiRegistration.outputs.apiScopeIds
     appRoleAssignmentRequired: true
   }
 }
-output KEY_VAULT_NAME string = keyVault.outputs.name
-output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerRegistry.outputs.registryLoginServer
-output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistry.outputs.registryName
+output KEY_VAULT_NAME string = minimal ? '' : keyVault!.outputs.name
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = minimal ? '' : containerRegistry!.outputs.registryLoginServer
+output AZURE_CONTAINER_REGISTRY_NAME string = minimal ? '' : containerRegistry!.outputs.registryName
 output RESOURCE_GROUP string = resourceGroup.name
 output AZURE_TENANT_ID string = tenant().tenantId
 
-output APPLICATIONINSIGHTS_CONNECTION_STRING string = monitoring.outputs.connectionString
-output REDIS_URI string = redis.outputs.endpoint
-output NG_API_URI string = 'https://${applicationGateway.outputs.publicIpAddress}/api'
-output NG_APP_URI string = 'https://${applicationGateway.outputs.publicIpAddress}'
-output NG_APPLICATIONINSIGHTS_CONNECTION_STRING string = monitoring.outputs.connectionString
+output APPLICATIONINSIGHTS_CONNECTION_STRING string = minimal ? '' : monitoring!.outputs.connectionString
+output REDIS_URI string = minimal ? '' : redis!.outputs.endpoint
+output NG_API_URI string = minimal ? 'http://localhost:4000/api' : 'https://${applicationGateway!.outputs.publicIpAddress}/api'
+output NG_APP_URI string = minimal ? 'https://localhost:4200' : 'https://${applicationGateway!.outputs.publicIpAddress}'
+output NG_APPLICATIONINSIGHTS_CONNECTION_STRING string = minimal ? '' : monitoring!.outputs.connectionString
 output NG_APP_CLIENT_ID string = appRegistration.outputs.clientAppId
 output NG_ENTRA_AUTHORITY string = '${environment().authentication.loginEndpoint}${tenant().tenantId}'
 output NG_API_SCOPES string[] = ['${apiRegistration.outputs.identifierUri}/${apiDelegatedScopeValue}']
-output ANGULAR_JSON_ALLOWED_HOST string = replace(app.outputs.uri, 'https://', '')
-output API_ENV_CORS_WHITELIST string = 'https://${applicationGateway.outputs.publicIpAddress}'
+output ANGULAR_JSON_ALLOWED_HOST string = minimal ? 'localhost' : replace(app!.outputs.uri, 'https://', '')
+output API_ENV_CORS_WHITELIST string = minimal ? 'https://localhost:4200' : 'https://${applicationGateway!.outputs.publicIpAddress}'
 output API_ENV_JWT_ISSUER string = issuer
 output API_ENV_JWT_AUDIENCE string = apiRegistration.outputs.apiAppId
 output API_ENV_JWT_REQUIRED_SCOPES string = apiDelegatedScopeValue
 output AGENT_ENV_CHAT_MODEL_NAME string = chatModels[0].model.name
 @secure()
 output AGENT_ENV_LANGSMITH_API_KEY string = langsmithApiKey
-output AGENT_ENV_AZURE_AI_ENDPOINT string = '${cognitiveServices.outputs.endpoint}/openai/v1/'
-output AGW_PUBLIC_IP string = applicationGateway.outputs.publicIpAddress
+output AGENT_ENV_AZURE_AI_ENDPOINT string = minimal ? '${endsWith(cognitiveServices.outputs.endpoint, '/') ? cognitiveServices.outputs.endpoint : '${cognitiveServices.outputs.endpoint}/'}openai/v1/' : '${cognitiveServices.outputs.endpoint}/openai/v1/'
+output AGW_PUBLIC_IP string = minimal ? '' : applicationGateway!.outputs.publicIpAddress
 output AZURE_AI_ENDPOINT string = cognitiveServices.outputs.endpoint
+output DEPLOYMENT_MODE string = minimal ? 'minimal' : 'full'

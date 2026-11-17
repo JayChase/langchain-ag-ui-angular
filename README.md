@@ -21,6 +21,7 @@ Key Vault, and Application Insights.
 - [Local development](#local-development)
 - [Working with the code](#working-with-the-code)
 - [Clean up](#clean-up)
+- [Cost-Conscious Local Development Setup](#-cost-conscious-local-development-setup)
 - [User authentication (OpenID Connect)](#user-authentication-openid-connect)
 - [LangGraph config profiles](#langgraph-config-profiles)
 - [Troubleshooting](#troubleshooting)
@@ -223,15 +224,10 @@ packages/
 
 ### Running and debugging
 
-- Start the agent and api using the debug launch settings
+In VS Code, open **Run and Debug** and launch **🤖 agent**, **🗼 api** and
+**🖥️ ng serve**. The API's existing `dev` script loads its local `.env` file.
 
 ![launch agent and api](./docs/images/launch-options.png)
-
-- Run the Angular app
-
-```bash
-pnpm app
-```
 
 > [!NOTE]
 > azd up will add the local ip address as an allowed address to the Azure Foundry instance but if you do not have a static ip address you may need to add your current address as well.
@@ -258,6 +254,122 @@ azd down
 > [!WARNING]
 > azd down will not remove the Entra app registrations. Please delete those manually.
 
+## 💰 Cost-Conscious Local Development Setup
+
+Minimal mode is a lower-cost option for local development. It provisions the
+Azure services needed to run the Agent, API and App locally, while skipping more
+expensive application-hosting and production infrastructure. It is **not** a
+production deployment or production-ready architecture, and it is not free:
+Azure AI usage can still incur charges. Use the full deployment for production.
+
+| Minimal mode keeps for local development | Full deployment only |
+| --- | --- |
+| Azure AI resource and consumption-based model | Application Gateway, public IP, demo certificate generation |
+| Entra API/SPA registrations and developer AI access | Container Apps/environment, ACR, managed identities |
+| Resource group | PostgreSQL, Redis, VNet, private endpoints/DNS, Key Vault, certificate storage, monitoring stack |
+
+This project runs a separate LangGraph development server. It uses local
+development storage, so minimal mode does **not** provision PostgreSQL or Redis.
+The omitted monitoring stack includes Application Insights, Log Analytics,
+the dashboard and Azure Monitor Private Link Scope (AMPLS).
+
+### Set up and provision
+
+Install dependencies and sign in as described in [Local development](#local-development).
+Instead of `azd up`, create a **new** azd environment and provision the minimal
+resources:
+
+```bash
+azd env new langchain-minimal
+azd env set MINIMAL true
+azd provision
+```
+
+When azd prompts, select the intended subscription, primary region, and model
+region. You normally select a subscription in this prompt; you do **not** need to
+look up or manually enter its ID.
+
+> **Recovering an existing environment:** If an environment already has
+> deployment outputs but its saved subscription setting is missing, restore the
+> exact subscription used by that deployment before retrying. The provisioning
+> hook reads existing AI firewall rules from that subscription, so do not
+> substitute the Azure CLI's current default subscription.
+>
+> ```bash
+> azd env set AZURE_SUBSCRIPTION_ID <original-subscription-id> --environment langchain-minimal
+> ```
+
+You need Azure AI model access and quota, Azure resource/RBAC permissions, and
+the Microsoft Graph permissions required to create the Entra registrations.
+Node.js 24+ is required for the cross-platform provisioning hooks. Have your
+LangSmith API key ready for the `LANGSMITH_API_KEY` provisioning input.
+
+### Provisioning behavior
+
+- On a fresh environment, project `preprovision` runs **before** azd selects the
+  subscription. It discovers your public IPv4 address using `set-my-ip` without
+  querying Azure resources or choosing an implicit Azure CLI subscription.
+- Later provisions read and preserve existing AI firewall rules in the selected
+  subscription, adding your current IP to the allowlist.
+- Postprovision generates local Angular configuration and Agent/API `.env`
+  files. No cloud application resources are deployed in minimal mode.
+- `MINIMAL` defaults to `false`, so existing full deployments keep their
+  architecture and `azd up` workflow. Minimal mode supports **`azd provision`**
+  only; hooks reject `azd up`, `azd package`, `azd deploy`, and `azd publish`
+  with local-run guidance.
+
+### Restricted local access
+
+Azure AI uses a public service endpoint restricted to your discovered public
+IPv4 address and any preserved IP rules. It does not enable an "all Azure
+services" exception or an internet-wide IP range. Foundry keeps default action
+**Deny** and bypass **None**.
+
+After provisioning, assign your user to the provisioned enterprise applications
+and grant the required consent as described under
+[User authentication](#user-authentication-openid-connect), then follow
+[Running and debugging](#running-and-debugging).
+
+The local Agent uses `DefaultAzureCredential` with your Azure CLI login.
+Entra sign-in and API token/scope validation remain enabled.
+
+Re-run `azd provision` if your public IP changes. Review and remove obsolete
+Foundry IPs in the portal when no longer needed. The preprovision hook aborts on
+firewall read errors rather than resetting the allowlist. Do not edit rules
+concurrently with provisioning or broaden them to the entire internet to resolve
+a timeout.
+
+### Local credentials and regeneration
+
+Postprovision writes the Agent and API settings to ignored
+`packages/agent/.env` and `packages/api/.env`, and creates the ignored Angular
+environment files. Protect `.azure/` and the package `.env` files as credentials:
+do not commit or publish their contents. The LangSmith key belongs in the
+Agent configuration, never the frontend.
+
+To regenerate local configuration from an already provisioned environment:
+
+```bash
+azd hooks run postprovision -e langchain-minimal
+```
+
+This overwrites the generated Angular environment files and known Agent/API
+configuration values, clears stale cloud identity, telemetry and database
+settings managed by the minimal helper, and preserves unrelated `.env`
+settings.
+
+### Costs
+
+Minimal mode is **not free**: Azure AI charges depend on model usage. It creates
+no PostgreSQL or Redis server to stop or start. Any existing full deployment
+continues billing independently until you remove it.
+
+### Existing deployments
+
+Use a new azd environment for minimal mode. Switching an existing environment
+is unsupported and does not remove previously deployed resources or stop their
+charges. See [Clean up](#clean-up) to remove an old deployment.
+
 ## User authentication (OpenID Connect)
 
 User sign-in is handled by **Microsoft Entra ID** using the OAuth 2.0 authorization
@@ -270,9 +382,9 @@ code flow with PKCE. Two app registrations are provisioned by Bicep:
   the app in Entra can obtain tokens for it.
 - **App registration** ([infra/app-registration.bicep](infra/app-registration.bicep)) —
   a _public client_ for the Angular SPA (no client secret). It is granted the
-  API's `app.use` scope and has redirect URIs for both local dev
-  (`https://localhost:4200/redirect`) and the deployed gateway
-  (`https://<agw-public-ip>/redirect`).
+  API's `app.use` scope and has the local dev redirect URI
+  (`https://localhost:4200/redirect`). Full mode also adds the deployed gateway
+  redirect URI (`https://<agw-public-ip>/redirect`).
 
 ```mermaid
 sequenceDiagram

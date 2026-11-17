@@ -139,7 +139,7 @@ while IFS= read -r line; do
 
     clean_value="$(strip_wrapping_quotes "$raw_value")"
     upsert_env_value "$env_file" "$setting_key" "$clean_value"
-    echo "Upserted ${setting_key} (${clean_value}) in ${package_name}/.env (from ${full_key})"
+    echo "Upserted ${setting_key} in ${package_name}/.env (from ${full_key})"
     updated_count=$((updated_count + 1))
 done <<< "$ENV_VARS"
 
